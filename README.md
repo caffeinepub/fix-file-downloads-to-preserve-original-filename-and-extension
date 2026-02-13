@@ -1,2 +1,3 @@
-# fix-file-downloads-to-preserve-original-filename-and-extension
-Exported from Caffeine project: Fix file downloads so original filenames are preserved (not generic "download")
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

@@ -1,0 +1,65 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Preserve original filenames for all file downloads",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Ensure all downloads from the paste view use the original uploaded filename (with extension) instead of a generic name.",
+      "acceptanceCriteria": [
+        "On the paste view page, downloading any file results in a download that uses the original uploaded filename (or the computed fallback filename) rather than a generic \"download\" name.",
+        "Works for all uploaded file types supported by the app (e.g., pdf/png/zip/jpg and others), not only specific extensions.",
+        "The filename shown in the browser's download confirmation/prompt matches the original uploaded name whenever it exists."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/fileDownload.ts",
+          "operation": "modify",
+          "description": "Update filename computation and download helper so the provided filename is always respected across browsers (including when filename is empty/whitespace), and ensure the final filename includes a best-effort extension (MIME-based inference) to prevent generic default names."
+        },
+        {
+          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "operation": "modify",
+          "description": "Adjust the paste view download click handler to always pass the stored per-file metadata (filename and contentType) through the download utility and to use the computed fallback filename when metadata is missing/incomplete, without changing existing UI layout/controls."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Harden downloadExternalBlob to avoid race conditions and maximize browser compatibility for the download filename.",
+      "acceptanceCriteria": [
+        "`frontend/src/utils/fileDownload.ts` no longer revokes the Object URL immediately in a way that can race the download; cleanup happens after the download has reliably started (e.g., delayed cleanup).",
+        "The anchor element uses the computed filename and sets it in a browser-compatible manner (property + attribute) before triggering the click.",
+        "No regressions: downloads still start successfully and memory cleanup (URL revocation + DOM removal) still occurs."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/fileDownload.ts",
+          "operation": "modify",
+          "description": "Revise `downloadExternalBlob` to (1) set the download filename via both `link.download = ...` and `link.setAttribute('download', ...)`, (2) append the link to the DOM and trigger click in a compatibility-friendly timing (e.g., next tick / requestAnimationFrame), and (3) delay Object URL revocation + DOM cleanup to avoid mobile Chromium/Brave filename fallback races while still ensuring cleanup occurs."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Guarantee the paste view passes correct per-file metadata into the download utility and uses fallback naming rules when metadata is missing.",
+      "acceptanceCriteria": [
+        "For file chunks with a stored filename, the download utility is invoked with that filename (and contentType when present).",
+        "For older pastes or missing metadata, the download filename uses the existing fallback rules (including MIME-based extension inference) and does not produce the literal name \"download\" unless that was actually stored as the filename.",
+        "UI behavior remains unchanged aside from corrected downloaded filename behavior (same Download button locations and loading state)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "operation": "modify",
+          "description": "Ensure per-file `chunk.filename` and `chunk.contentType` are forwarded for every file download action and that the fallback name path is taken when filename is missing/empty, keeping button placement, loading state, and toast behavior the same."
+        },
+        {
+          "path": "frontend/src/utils/fileDownload.ts",
+          "operation": "modify",
+          "description": "Harden `computeDownloadFilename` to treat empty/whitespace-only filenames as missing, preserve literal stored names (including \"download\") only when explicitly present, and keep MIME-based extension inference as the fallback mechanism to avoid generic browser naming."
+        }
+      ]
+    }
+  ]
+}

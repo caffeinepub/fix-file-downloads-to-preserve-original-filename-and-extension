@@ -1,0 +1,61 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T04:22:15.367Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/fileDownload.ts",
+          "frontend/src/pages/PasteViewPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/fileDownload.ts"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/fileDownload.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/fileDownload.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/PasteViewPage.tsx",
+          "frontend/src/utils/fileDownload.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/fileDownload.ts"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/src/utils/fileDownload.ts",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

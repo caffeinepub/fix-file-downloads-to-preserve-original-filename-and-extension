@@ -1,0 +1,41 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-12T04:22:15.365Z",
+  "summary": "The diff shows updates to the download utility (fileDownload.ts) adding filename computation and setting the anchor download attribute more robustly, but there is no concrete diff evidence that the paste view page is now passing stored filename/contentType metadata into the utility or that the end-to-end “Download” button behavior is fixed. The object URL cleanup hardening is suggested but the key cleanup logic is truncated, so full REQ-2 compliance cannot be confirmed.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "reason": "Only the utility (frontend/src/utils/fileDownload.ts) is shown as modified. There is no diff evidence that the paste view “Download” button now uses stored original filenames (or the fallback) when invoking the download flow.",
+      "evidence": [
+        "frontend/src/utils/fileDownload.ts (only utility changes shown; no paste view invocation changes provided)",
+        "frontend-file-summaries.txt (is not source code; cannot verify behavior change)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Harden the `downloadExternalBlob` implementation to avoid browsers falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "reason": "The diff shows setting `link.download` and also `link.setAttribute('download', filename)` and a `requestAnimationFrame` click, but the crucial delayed cleanup (URL revocation + DOM removal) portion is truncated, so it cannot be verified that cleanup happens after the download reliably starts and that memory cleanup still occurs.",
+      "evidence": [
+        "frontend/src/utils/fileDownload.ts (cleanup section is truncated after comment 'Delay cleanup to avoid race conditions...')"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that fallback filename logic is used when metadata is missing/incomplete.",
+      "reason": "No diff is provided for PasteViewPage or the download invocation callsites; therefore there is no evidence that stored filename/contentType are now passed into `downloadExternalBlob` or that `computeDownloadFilename` is used for older/missing metadata.",
+      "evidence": [
+        "frontend/src/utils/fileDownload.ts (adds computeDownloadFilename but no callsite changes shown)",
+        "frontend-file-summaries.txt (not source code; cannot verify actual callsites)"
+      ]
+    }
+  ],
+  "hallucinated_features": [],
+  "confidence": 0.66,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/utils/fileDownload.ts",
+    "project_state.json"
+  ]
+}

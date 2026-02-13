@@ -1,0 +1,65 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-fix-the-client-side-download-flow-so-that-when-a-user-clicks-download-on-any-uploaded-file-the-browser-download-prompt-and-the-saved-file-name-use-the-original-uploaded-filename-including-extension-rather-than-a-generic-name-like-download-across-all-file-types",
+      "featureTitle": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "files": [
+        "frontend/src/utils/fileDownload.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-harden-the-downloadexternalblob-implementation-to-avoid-browsers-notably-mobile-chromium-brave-falling-back-to-a-generic-filename-by-adjusting-the-timing-of-object-url-cleanup-and-ensuring-the-download-attribute-is-applied-in-the-most-compatible-way",
+      "featureTitle": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "files": [
+        "frontend/src/utils/fileDownload.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-paste-view-always-passes-the-correct-stored-file-metadata-filename-and-contenttype-into-the-download-utility-for-every-file-chunk-and-that-the-computed-fallback-filename-logic-is-used-when-metadata-is-missing-or-incomplete",
+      "featureTitle": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+      "files": [
+        "frontend/src/utils/fileDownload.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

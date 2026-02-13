@@ -1,0 +1,13 @@
+{
+  "frontend/src/App.tsx": "Main application component with hash-based routing for create and paste view pages, wrapped with ThemeProvider and Toaster for notifications.",
+  "frontend/src/components/AppLayout.tsx": "Shared layout component providing consistent header with logo/navigation and footer with attribution across all pages.",
+  "frontend/src/components/LoginButton.tsx": "Reusable authentication button component using Internet Identity with loading states and query cache clearing on logout.",
+  "frontend/src/components/ErrorState.tsx": "Shared error/empty state component displaying appropriate messages and illustrations for expired, not-found, and error scenarios.",
+  "frontend/src/pages/CreatePastePage.tsx": "Authenticated paste creation page with message input, multi-file upload with size validation, expiration selection, and share URL display after successful creation.",
+  "frontend/src/pages/PasteViewPage.tsx": "Public paste viewing page that displays message and files with blob-based download functionality preserving original filenames and extensions (with MIME-based fallback for older pastes), remaining time indicator, loading states during download, and proper error handling for expired/missing pastes.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for creating pastes with file uploads (now passing original filename and MIME type to backend) and fetching paste data with type-safe chunk handling that exposes filename and contentType metadata for files.",
+  "frontend/src/config/pasteLimits.ts": "Centralized configuration file defining the 50MB per-file size limit for easy future adjustments.",
+  "frontend/src/index.css": "Global styles with warm neutral OKLCH color palette (amber/orange primary) for both light and dark modes.",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom font stacks, extended color tokens, and additional shadow utilities for the warm design system.",
+  "frontend/src/utils/fileDownload.ts": "Utility module providing MIME-to-extension mapping, filename normalization with extension inference, and blob-based download functionality using Object URLs with delayed cleanup to prevent mobile browser race conditions that cause generic filenames."
+}

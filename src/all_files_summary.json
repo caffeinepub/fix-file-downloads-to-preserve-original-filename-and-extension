@@ -1,0 +1,23 @@
+{
+  "backend/main.mo": "Motoko backend managing user profiles and multi-chunk pastes with access control, expiration logic, and blob-backed file storage.",
+  "feature_evidence.json": "Feature evidence report listing download‑filename related features, their affected files, components, tests, and confidence levels.",
+  "frontend-file-summaries.txt": "Text file containing prewritten one‑sentence summaries for key frontend source files.",
+  "frontend/index.css": "Tailwind base styles defining a warm OKLCH color palette and theme variables for light and dark modes.",
+  "frontend/index.html": "HTML entry point mounting the React app and loading main.tsx.",
+  "frontend/src/App.tsx": "Top-level React component implementing hash-based routing and rendering create or view pages within themed layout.",
+  "frontend/src/components/AppLayout.tsx": "Layout wrapper providing header, footer, navigation, and authentication-aware UI structure.",
+  "frontend/src/components/ErrorState.tsx": "Component displaying styled error, not-found, or expired states with icons and illustration.",
+  "frontend/src/components/LoginButton.tsx": "Authentication button handling Internet Identity login/logout with loading and error handling.",
+  "frontend/src/config/pasteLimits.ts": "Configuration defining the 50MB per-file upload size limit.",
+  "frontend/src/hooks/useActor.ts": "Hook creating an authenticated or anonymous backend actor and refreshing dependent queries when identity changes.",
+  "frontend/src/hooks/useInternetIdentity.ts": "Provides a React context and provider for Internet Identity authentication, managing identity state and login/logout flow using AuthClient.",
+  "frontend/src/hooks/useQueries.ts": "Defines React Query hooks for creating pastes and fetching paste data, including handling files, text chunks, and expiration info.",
+  "frontend/src/index.css": "Tailwind CSS setup defining color variables, theming for light/dark modes, and base styling.",
+  "frontend/src/main.tsx": "Bootstraps the React app, wrapping it with QueryClientProvider and InternetIdentityProvider.",
+  "frontend/src/pages/CreatePastePage.tsx": "UI page for creating a new paste with text, files, expiration options, and share link generation.",
+  "frontend/src/pages/PasteViewPage.tsx": "Displays a shared paste with message and downloadable files, handling expiration and download actions.",
+  "frontend/src/utils/fileDownload.ts": "Utility functions for mapping MIME types to extensions, generating safe filenames, and downloading ExternalBlob files.",
+  "frontend/src/utils/urlParams.ts": "Provides helpers to get URL parameters, persist them in sessionStorage, and remove them from the hash for routing and state persistence.",
+  "frontend/tailwind.config.js": "Configures Tailwind CSS with custom colors, fonts, container settings, animations, and plugins.",
+  "project_state.json": "Tracks project state, requirements, and issues related to fixing file download behavior to preserve original filenames."
+}

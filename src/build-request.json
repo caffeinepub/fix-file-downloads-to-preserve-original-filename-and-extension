@@ -1,0 +1,76 @@
+{
+  "kind": "build_request",
+  "title": "Fix file downloads so original filenames are preserved (not generic \"download\")",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4",
+          "msg-8"
+        ],
+        "quotes": [
+          "No 2. Still generic name comes for all download. Apply fix for all upload",
+          "I am ready.  Proceed"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On the paste view page, downloading any file results in a download that uses the original uploaded filename (or the computed fallback filename) rather than a generic \"download\" name.",
+        "Works for all uploaded file types supported by the app (e.g., pdf/png/zip/jpg and others), not only specific extensions.",
+        "The filename shown in the browser's download confirmation/prompt matches the original uploaded name whenever it exists."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Still generic name comes for all download."
+        ]
+      },
+      "acceptanceCriteria": [
+        "`frontend/src/utils/fileDownload.ts` no longer revokes the Object URL immediately in a way that can race the download; cleanup happens after the download has reliably started (e.g., delayed cleanup).",
+        "The anchor element uses the computed filename and sets it in a browser-compatible manner (property + attribute) before triggering the click.",
+        "No regressions: downloads still start successfully and memory cleanup (URL revocation + DOM removal) still occurs."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "Apply fix for all upload"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For file chunks with a stored filename, the download utility is invoked with that filename (and contentType when present).",
+        "For older pastes or missing metadata, the download filename uses the existing fallback rules (including MIME-based extension inference) and does not produce the literal name \"download\" unless that was actually stored as the filename.",
+        "UI behavior remains unchanged aside from corrected downloaded filename behavior (same Download button locations and loading state)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not edit files under `frontend/src/hooks/useInternetIdentity.ts` / `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or any files in `frontend/src/components/ui` (compose them instead).",
+    "Backend remains single-actor Motoko (`backend/main.mo`). Only add `backend/migration.mo` changes if state schema changes are required (not expected for this fix)."
+  ],
+  "nonGoals": [
+    "Adding third-party storage, CDN downloads, or external databases.",
+    "Implementing new authentication methods beyond Internet Identity.",
+    "Changing paste creation/expiration features or UI redesign unrelated to download filename preservation."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Project focused on fixing file download behavior so all downloads preserve the original uploaded filename instead of using a generic name.",
+  "architectural_notes": [],
+  "known_issues": [
+    "Downloads still save with a generic filename (e.g., 'download') instead of the original uploaded filename across all file types."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-fix-the-client-side-download-flow-so-that-when-a-user-clicks-download-on-any-uploaded-file-the-browser-download-prompt-and-the-saved-file-name-use-the-original-uploaded-filename-including-extension-rather-than-a-generic-name-like-download-across-all-file-types",
+      "title": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-harden-the-downloadexternalblob-implementation-to-avoid-browsers-notably-mobile-chromium-brave-falling-back-to-a-generic-filename-by-adjusting-the-timing-of-object-url-cleanup-and-ensuring-the-download-attribute-is-applied-in-the-most-compatible-way",
+      "title": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-paste-view-always-passes-the-correct-stored-file-metadata-filename-and-contenttype-into-the-download-utility-for-every-file-chunk-and-that-the-computed-fallback-filename-logic-is-used-when-metadata-is-missing-or-incomplete",
+      "title": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Fix downloads to preserve original filenames (avoid generic 'download' name) for all uploaded file types",
+      "reqIds": [],
+      "status": "in_progress"
+    }
+  ],
+  "projectName": "Fix file downloads so original filenames are preserved (not generic \"download\")",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
