@@ -8,13 +8,16 @@ import { ExternalBlob } from '../backend';
 import { toast } from 'sonner';
 import { computeDownloadFilename, downloadExternalBlob } from '../utils/fileDownload';
 import { useState } from 'react';
+import { isValidPasteId } from '../utils/pasteIds';
+import { formatRemainingTime } from '../utils/formatRemainingTime';
 
 interface PasteViewPageProps {
   pasteId: string;
 }
 
 export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
-  const { data: pasteData, isLoading, error } = useGetPaste(pasteId);
+  // Always call hooks at the top level - validate after
+  const { data: pasteData, isLoading, error, refetch } = useGetPaste(pasteId);
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
 
   const handleDownload = async (
@@ -41,19 +44,10 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
     }
   };
 
-  const formatRemainingTime = (nanoseconds: bigint) => {
-    const seconds = Number(nanoseconds) / 1_000_000_000;
-    const hours = Math.floor(seconds / 3600);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return `${days} day${days > 1 ? 's' : ''}`;
-    } else if (hours > 0) {
-      return `${hours} hour${hours > 1 ? 's' : ''}`;
-    } else {
-      return 'Less than 1 hour';
-    }
-  };
+  // Validate paste ID after hooks are called
+  if (!isValidPasteId(pasteId)) {
+    return <ErrorState type="not-found" />;
+  }
 
   if (isLoading) {
     return (
@@ -65,10 +59,26 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
 
   if (error) {
     const errorMessage = error.message || '';
+    
+    // Distinguish between different error types
     if (errorMessage.includes('expired')) {
       return <ErrorState type="expired" />;
+    } else if (
+      errorMessage.includes('does not exist') || 
+      errorMessage.includes('has been deleted') ||
+      errorMessage.includes('Invalid paste ID')
+    ) {
+      return <ErrorState type="not-found" />;
+    } else {
+      // Network/initialization/environment errors - show actionable error with retry
+      return (
+        <ErrorState 
+          type="error" 
+          message={errorMessage}
+          onRetry={() => refetch()}
+        />
+      );
     }
-    return <ErrorState type="not-found" />;
   }
 
   if (!pasteData) {
@@ -125,15 +135,14 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
                       className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm font-medium truncate" title={displayName}>
-                          {displayName}
-                        </span>
+                        <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                        <span className="text-sm truncate">{displayName}</span>
                       </div>
                       <Button
                         onClick={() => handleDownload(chunk.blob, chunk.filename, chunk.contentType, index)}
+                        variant="outline"
                         size="sm"
-                        className="gap-2 flex-shrink-0"
+                        className="gap-2 shrink-0"
                         disabled={isDownloading}
                       >
                         {isDownloading ? (
@@ -152,12 +161,6 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {textChunks.length === 0 && fileChunks.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              This paste appears to be empty.
             </div>
           )}
         </CardContent>

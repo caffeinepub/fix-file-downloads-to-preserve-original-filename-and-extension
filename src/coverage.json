@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T04:22:15.367Z",
+  "generatedAt": "2026-02-14T18:59:42.996Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,47 +12,56 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+        "summary": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/fileDownload.ts",
+          "frontend/src/utils/formatRemainingTime.ts",
           "frontend/src/pages/PasteViewPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/fileDownload.ts"
+          "frontend/src/utils/formatRemainingTime.ts"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+        "summary": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/fileDownload.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/UploadProgressStatus.tsx",
+          "frontend/src/pages/CreatePastePage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/fileDownload.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/UploadProgressStatus.tsx",
+          "frontend/src/pages/CreatePastePage.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+        "summary": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/PasteViewPage.tsx",
-          "frontend/src/utils/fileDownload.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/CreatePastePage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/fileDownload.ts"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/CreatePastePage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/utils/fileDownload.ts",
+    "frontend/src/components/UploadProgressStatus.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CreatePastePage.tsx",
+    "frontend/src/utils/formatRemainingTime.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

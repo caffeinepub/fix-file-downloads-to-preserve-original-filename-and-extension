@@ -1,32 +1,33 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project focused on fixing file download behavior so all downloads preserve the original uploaded filename instead of using a generic name.",
+  "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Downloads still save with a generic filename (e.g., 'download') instead of the original uploaded filename across all file types."
+    "Slow upload when creating a paste",
+    "Upload progress bar appears delayed after initial button loading state"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-client-side-download-flow-so-that-when-a-user-clicks-download-on-any-uploaded-file-the-browser-download-prompt-and-the-saved-file-name-use-the-original-uploaded-filename-including-extension-rather-than-a-generic-name-like-download-across-all-file-types",
-      "title": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "id": "feature-remove-the-redundant-word-left-from-the-paste-expiration-ui-so-the-expiry-message-reads-naturally-e-g-expires-in-9-min-not-expires-in-9-min-left",
+      "title": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-harden-the-downloadexternalblob-implementation-to-avoid-browsers-notably-mobile-chromium-brave-falling-back-to-a-generic-filename-by-adjusting-the-timing-of-object-url-cleanup-and-ensuring-the-download-attribute-is-applied-in-the-most-compatible-way",
-      "title": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "id": "feature-improve-the-paste-creation-ux-so-upload-progress-feedback-appears-immediately-when-the-user-clicks-create-paste-without-an-initial-period-where-only-the-button-is-loading-and-the-progress-ui-appears-later",
+      "title": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-the-paste-view-always-passes-the-correct-stored-file-metadata-filename-and-contenttype-into-the-download-utility-for-every-file-chunk-and-that-the-computed-fallback-filename-logic-is-used-when-metadata-is-missing-or-incomplete",
-      "title": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+      "id": "feature-investigate-and-improve-slow-upload-performance-for-file-pastes-focusing-on-reducing-time-to-first-progress-and-overall-upload-time-where-possible-without-changing-the-50mb-per-file-limit-behavior",
+      "title": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
       "reqIds": [
         "REQ-3"
       ],
@@ -36,12 +37,24 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix downloads to preserve original filenames (avoid generic 'download' name) for all uploaded file types",
+      "summary": "Update expiration UI copy: remove the redundant 'left' wording since 'expire' already conveys it",
       "reqIds": [],
-      "status": "in_progress"
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Improve paste creation/upload UX: show upload progress immediately and make the loading flow feel more professional",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Investigate and improve slow upload performance when creating a paste",
+      "reqIds": [],
+      "status": "pending"
     }
   ],
-  "projectName": "Fix file downloads so original filenames are preserved (not generic \"download\")",
+  "projectName": "Polish expiration wording and make paste upload progress immediate and more professional",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

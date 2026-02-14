@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-client-side-download-flow-so-that-when-a-user-clicks-download-on-any-uploaded-file-the-browser-download-prompt-and-the-saved-file-name-use-the-original-uploaded-filename-including-extension-rather-than-a-generic-name-like-download-across-all-file-types",
-      "featureTitle": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "featureId": "feature-remove-the-redundant-word-left-from-the-paste-expiration-ui-so-the-expiry-message-reads-naturally-e-g-expires-in-9-min-not-expires-in-9-min-left",
+      "featureTitle": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
       "files": [
-        "frontend/src/utils/fileDownload.ts"
+        "frontend/src/utils/formatRemainingTime.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,10 +22,12 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-harden-the-downloadexternalblob-implementation-to-avoid-browsers-notably-mobile-chromium-brave-falling-back-to-a-generic-filename-by-adjusting-the-timing-of-object-url-cleanup-and-ensuring-the-download-attribute-is-applied-in-the-most-compatible-way",
-      "featureTitle": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "featureId": "feature-improve-the-paste-creation-ux-so-upload-progress-feedback-appears-immediately-when-the-user-clicks-create-paste-without-an-initial-period-where-only-the-button-is-loading-and-the-progress-ui-appears-later",
+      "featureTitle": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
       "files": [
-        "frontend/src/utils/fileDownload.ts"
+        "frontend/src/components/UploadProgressStatus.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CreatePastePage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -42,10 +44,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-paste-view-always-passes-the-correct-stored-file-metadata-filename-and-contenttype-into-the-download-utility-for-every-file-chunk-and-that-the-computed-fallback-filename-logic-is-used-when-metadata-is-missing-or-incomplete",
-      "featureTitle": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
+      "featureId": "feature-investigate-and-improve-slow-upload-performance-for-file-pastes-focusing-on-reducing-time-to-first-progress-and-overall-upload-time-where-possible-without-changing-the-50mb-per-file-limit-behavior",
+      "featureTitle": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
       "files": [
-        "frontend/src/utils/fileDownload.ts"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CreatePastePage.tsx"
       ],
       "components": [
         "authorization@4.0.0",

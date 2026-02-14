@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useCreatePaste } from '../hooks/useQueries';
+import { useCreatePaste, type UploadProgress } from '../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Copy, Check, ExternalLink, Loader2, FileText, X } from 'lucide-react';
+import { Upload, Copy, Check, ExternalLink, Loader2, FileText, X, Clock, Link2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '../config/pasteLimits';
+import { isValidPasteId } from '../utils/pasteIds';
+import UploadProgressStatus from '../components/UploadProgressStatus';
 
 export default function CreatePastePage() {
   const { identity } = useInternetIdentity();
@@ -21,10 +23,13 @@ export default function CreatePastePage() {
   const [error, setError] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
 
   const createPasteMutation = useCreatePaste();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (createPasteMutation.isPending) return; // Prevent file changes during upload
+    
     const selectedFiles = Array.from(e.target.files || []);
     setError('');
 
@@ -41,6 +46,7 @@ export default function CreatePastePage() {
   };
 
   const removeFile = (index: number) => {
+    if (createPasteMutation.isPending) return; // Prevent file removal during upload
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -53,12 +59,43 @@ export default function CreatePastePage() {
       return;
     }
 
+    // Set initial preparing state immediately
+    if (files.length > 0) {
+      setUploadProgress({
+        currentFile: 1,
+        totalFiles: files.length,
+        filename: files[0].name,
+        percentage: 0,
+        stage: 'preparing',
+      });
+    } else {
+      // For text-only pastes, show creating state
+      setUploadProgress({
+        currentFile: 0,
+        totalFiles: 0,
+        filename: '',
+        percentage: 100,
+        stage: 'creating',
+      });
+    }
+
+    // Allow React to render the progress UI before starting the async work
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     try {
       const pasteId = await createPasteMutation.mutateAsync({
         message: message.trim(),
         files,
         expirationType,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
+        },
       });
+
+      // Validate the returned paste ID
+      if (!isValidPasteId(pasteId)) {
+        throw new Error('Invalid paste ID returned from server');
+      }
 
       const url = `${window.location.origin}${window.location.pathname}#/p/${pasteId}`;
       setShareUrl(url);
@@ -68,13 +105,20 @@ export default function CreatePastePage() {
       setMessage('');
       setFiles([]);
       setExpirationType('24hours');
+      setUploadProgress(null);
     } catch (err: any) {
       setError(err.message || 'Failed to create paste. Please try again.');
       toast.error('Failed to create paste');
+      setUploadProgress(null);
     }
   };
 
   const handleCopy = async () => {
+    if (!shareUrl) {
+      toast.error('No link to copy');
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
@@ -86,7 +130,15 @@ export default function CreatePastePage() {
   };
 
   const handleOpenPaste = () => {
-    window.location.hash = shareUrl.split('#')[1];
+    if (!shareUrl) {
+      toast.error('No link to open');
+      return;
+    }
+
+    const hashPart = shareUrl.split('#')[1];
+    if (hashPart) {
+      window.location.hash = hashPart;
+    }
   };
 
   const handleCreateAnother = () => {
@@ -99,7 +151,7 @@ export default function CreatePastePage() {
       <div className="max-w-2xl mx-auto">
         <Card className="border-2 border-primary/20">
           <CardHeader>
-            <CardTitle className="text-2xl">Paste Created Successfully! 🎉</CardTitle>
+            <CardTitle className="text-2xl">Paste Created Successfully</CardTitle>
             <CardDescription>Share this link with anyone to give them access</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -130,10 +182,47 @@ export default function CreatePastePage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Create a New Paste</CardTitle>
-            <CardDescription>Share files and messages securely with auto-expiration</CardDescription>
+            <CardTitle className="text-2xl">Share Content Securely</CardTitle>
+            <CardDescription>
+              Create temporary, link-based shares for text and files
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 py-4">
+              <div className="flex gap-3">
+                <div className="shrink-0 mt-1">
+                  <Link2 className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium mb-1">Share via Link</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Create a unique link to share text messages and files with anyone
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="shrink-0 mt-1">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium mb-1">Anyone with the Link Can View</h3>
+                  <p className="text-sm text-muted-foreground">
+                    No login required for viewers — just share the link and they're in
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="shrink-0 mt-1">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium mb-1">Automatic Expiration</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Content automatically expires after your chosen time period for limited-time access
+                  </p>
+                </div>
+              </div>
+            </div>
             <Alert>
               <AlertDescription className="text-center py-4">
                 Please log in to create a paste. Anyone with the link will be able to view it without logging in.
@@ -145,19 +234,69 @@ export default function CreatePastePage() {
     );
   }
 
+  const isCreating = createPasteMutation.isPending;
+
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Create a New Paste</CardTitle>
-          <CardDescription>Share files and messages securely with auto-expiration</CardDescription>
+          <CardTitle className="text-2xl">Share Content Securely</CardTitle>
+          <CardDescription>
+            Create temporary, link-based shares for text and files
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="grid gap-4 py-4 mb-6 border-b pb-6">
+            <div className="flex gap-3">
+              <div className="shrink-0 mt-1">
+                <Link2 className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium mb-1">Share via Link</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create a unique link to share text messages and files with anyone
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="shrink-0 mt-1">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium mb-1">Anyone with the Link Can View</h3>
+                <p className="text-sm text-muted-foreground">
+                  No login required for viewers — just share the link and they're in
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="shrink-0 mt-1">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-medium mb-1">Automatic Expiration</h3>
+                <p className="text-sm text-muted-foreground">
+                  Content automatically expires after your chosen time period for limited-time access
+                </p>
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
+            )}
+
+            {uploadProgress && (
+              <UploadProgressStatus
+                currentFile={uploadProgress.currentFile}
+                totalFiles={uploadProgress.totalFiles}
+                filename={uploadProgress.filename}
+                percentage={uploadProgress.percentage}
+                stage={uploadProgress.stage}
+              />
             )}
 
             <div className="space-y-2">
@@ -169,20 +308,24 @@ export default function CreatePastePage() {
                 onChange={(e) => setMessage(e.target.value)}
                 rows={6}
                 className="resize-none"
+                disabled={isCreating}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="files">Files (optional)</Label>
-              <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+              <div className={`border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors ${
+                isCreating ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50 cursor-pointer'
+              }`}>
                 <input
                   type="file"
                   id="files"
                   multiple
                   onChange={handleFileChange}
                   className="hidden"
+                  disabled={isCreating}
                 />
-                <label htmlFor="files" className="cursor-pointer">
+                <label htmlFor="files" className={isCreating ? 'cursor-not-allowed' : 'cursor-pointer'}>
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
                     Click to upload files (max {MAX_FILE_SIZE_MB}MB per file)
@@ -198,9 +341,9 @@ export default function CreatePastePage() {
                       className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="text-sm truncate">{file.name}</span>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           ({(file.size / 1024 / 1024).toFixed(2)} MB)
                         </span>
                       </div>
@@ -209,7 +352,8 @@ export default function CreatePastePage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFile(index)}
-                        className="flex-shrink-0"
+                        className="shrink-0"
+                        disabled={isCreating}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -221,11 +365,16 @@ export default function CreatePastePage() {
 
             <div className="space-y-2">
               <Label htmlFor="expiration">Expiration</Label>
-              <Select value={expirationType} onValueChange={setExpirationType}>
+              <Select 
+                value={expirationType} 
+                onValueChange={setExpirationType}
+                disabled={isCreating}
+              >
                 <SelectTrigger id="expiration">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="10min">10 Minutes</SelectItem>
                   <SelectItem value="24hours">24 Hours</SelectItem>
                   <SelectItem value="7days">7 Days</SelectItem>
                   <SelectItem value="30days">30 Days</SelectItem>
@@ -236,9 +385,9 @@ export default function CreatePastePage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={createPasteMutation.isPending}
+              disabled={isCreating}
             >
-              {createPasteMutation.isPending ? (
+              {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Creating...

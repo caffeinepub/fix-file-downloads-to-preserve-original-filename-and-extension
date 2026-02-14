@@ -57,6 +57,9 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'clearAllPastes' : ActorMethod<[], undefined>,
+  'clearLegacyIdMap' : ActorMethod<[], undefined>,
+  'clearUserProfiles' : ActorMethod<[], undefined>,
   'createPaste' : ActorMethod<[Array<PasteChunk>, string], string>,
   'deleteExpiredPastes' : ActorMethod<[], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -73,6 +76,8 @@ export interface _SERVICE {
   'listActivePastes' : ActorMethod<[], Array<string>>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveFile' : ActorMethod<[ExternalBlob, string, [] | [string]], FileChunk>,
+  'systemDefaultCheck' : ActorMethod<[], undefined>,
+  'systemDefaultReset' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

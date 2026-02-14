@@ -1,41 +1,66 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T04:22:15.365Z",
-  "summary": "The diff shows updates to the download utility (fileDownload.ts) adding filename computation and setting the anchor download attribute more robustly, but there is no concrete diff evidence that the paste view page is now passing stored filename/contentType metadata into the utility or that the end-to-end “Download” button behavior is fixed. The object URL cleanup hardening is suggested but the key cleanup logic is truncated, so full REQ-2 compliance cannot be confirmed.",
+  "generatedAt": "2026-02-14T18:59:42.993Z",
+  "summary": "REQ-1 appears implemented via updated remaining-time formatting without the word “left”. REQ-2 appears largely implemented by introducing an immediate in-form status/progress panel with explicit “preparing/uploading/creating” stages, but the diff summary does not clearly show the submit button being disabled throughout. REQ-3 is partially addressed with faster time-to-first-feedback (“preparing” shown before file reading) and progress callbacks, but there’s insufficient evidence of changes that minimize time-to-first-upload-progress or materially improve upload throughput beyond UI feedback.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
-      "reason": "Only the utility (frontend/src/utils/fileDownload.ts) is shown as modified. There is no diff evidence that the paste view “Download” button now uses stored original filenames (or the fallback) when invoking the download flow.",
-      "evidence": [
-        "frontend/src/utils/fileDownload.ts (only utility changes shown; no paste view invocation changes provided)",
-        "frontend-file-summaries.txt (is not source code; cannot verify behavior change)"
-      ]
-    },
-    {
       "id": "REQ-2",
-      "requirement": "Harden the `downloadExternalBlob` implementation to avoid browsers falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
-      "reason": "The diff shows setting `link.download` and also `link.setAttribute('download', filename)` and a `requestAnimationFrame` click, but the crucial delayed cleanup (URL revocation + DOM removal) portion is truncated, so it cannot be verified that cleanup happens after the download reliably starts and that memory cleanup still occurs.",
+      "requirement": "The “Create Paste” button remains disabled during the entire operation to prevent duplicate submissions, and the status panel is the primary indicator (not a delayed secondary indicator).",
+      "reason": "The diff shows guards preventing file changes/removal during upload, and it shows an immediate status panel, but it does not explicitly show the “Create Paste” button being disabled during the whole mutation lifecycle (JSX portion is truncated).",
       "evidence": [
-        "frontend/src/utils/fileDownload.ts (cleanup section is truncated after comment 'Delay cleanup to avoid race conditions...')"
+        "frontend/src/pages/CreatePastePage.tsx (truncated)"
       ]
     },
     {
       "id": "REQ-3",
-      "requirement": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that fallback filename logic is used when metadata is missing/incomplete.",
-      "reason": "No diff is provided for PasteViewPage or the download invocation callsites; therefore there is no evidence that stored filename/contentType are now passed into `downloadExternalBlob` or that `computeDownloadFilename` is used for older/missing metadata.",
+      "requirement": "Minimize time-to-first-upload-progress event and improve overall upload performance where possible (not just time-to-first-user-feedback), without changing the 50MB per-file limit behavior.",
+      "reason": "The changes clearly improve time-to-first-user-feedback via an immediate “preparing” stage and a forced render tick, but file upload progress still appears to start only after reading the entire file into memory (await file.arrayBuffer()) before saveFile begins. No clear diff evidence shows a restructuring that would start byte-level upload earlier or reduce total upload time.",
       "evidence": [
-        "frontend/src/utils/fileDownload.ts (adds computeDownloadFilename but no callsite changes shown)",
-        "frontend-file-summaries.txt (not source code; cannot verify actual callsites)"
+        "frontend/src/hooks/useQueries.ts (truncated)",
+        "frontend/src/pages/CreatePastePage.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.66,
+  "hallucinated_features": [
+    {
+      "description": "Added/changed user profile APIs and related authorization checks (getCallerUserProfile, getUserProfile, saveCallerUserProfile) in the backend.",
+      "reason": "Not requested by any requirement; requirements focus on expiration wording and upload/progress UX/performance.",
+      "evidence": [
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "description": "Paste ID validation/normalization utilities and routing behavior for extracting/normalizing paste IDs (handling trailing slashes, query strings, URL decoding).",
+      "reason": "Not requested in REQ-1/2/3; appears to be an additional robustness feature.",
+      "evidence": [
+        "frontend/src/hooks/useQueries.ts (truncated)",
+        "frontend-file-summaries.txt (frontend/src/App.tsx, frontend/src/utils/pasteIds.ts)"
+      ]
+    },
+    {
+      "description": "Global design/theme changes (warm neutral OKLCH palette) and Tailwind configuration extensions.",
+      "reason": "UI theme/palette changes were not requested; requirements were specific to expiration wording and upload progress behavior.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/index.css, frontend/tailwind.config.js)"
+      ]
+    },
+    {
+      "description": "New/expanded file download utility with MIME-to-extension mapping and delayed Object URL cleanup to improve mobile filename behavior.",
+      "reason": "Not requested; outside the scope of expiration wording and upload progress UX/performance.",
+      "evidence": [
+        "frontend-file-summaries.txt (frontend/src/utils/fileDownload.ts)"
+      ]
+    }
+  ],
+  "confidence": 0.68,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/utils/fileDownload.ts",
+    "frontend/src/components/UploadProgressStatus.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CreatePastePage.tsx",
+    "frontend/src/utils/formatRemainingTime.ts",
     "project_state.json"
   ]
 }

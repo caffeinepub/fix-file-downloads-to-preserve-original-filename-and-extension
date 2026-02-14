@@ -137,6 +137,9 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    clearAllPastes(): Promise<void>;
+    clearLegacyIdMap(): Promise<void>;
+    clearUserProfiles(): Promise<void>;
     createPaste(chunks: Array<PasteChunk>, expirationType: string): Promise<string>;
     deleteExpiredPastes(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -150,6 +153,8 @@ export interface backendInterface {
     listActivePastes(): Promise<Array<string>>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveFile(blob: ExternalBlob, filename: string, contentType: string | null): Promise<FileChunk>;
+    systemDefaultCheck(): Promise<void>;
+    systemDefaultReset(): Promise<void>;
 }
 import type { ExternalBlob as _ExternalBlob, FileChunk as _FileChunk, Paste as _Paste, PasteChunk as _PasteChunk, PasteChunkType as _PasteChunkType, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -263,6 +268,48 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n8(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async clearAllPastes(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.clearAllPastes();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.clearAllPastes();
+            return result;
+        }
+    }
+    async clearLegacyIdMap(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.clearLegacyIdMap();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.clearLegacyIdMap();
+            return result;
+        }
+    }
+    async clearUserProfiles(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.clearUserProfiles();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.clearUserProfiles();
             return result;
         }
     }
@@ -446,6 +493,34 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.saveFile(await to_candid_ExternalBlob_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n34(this._uploadFile, this._downloadFile, arg2));
             return from_candid_FileChunk_n27(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async systemDefaultCheck(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.systemDefaultCheck();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.systemDefaultCheck();
+            return result;
+        }
+    }
+    async systemDefaultReset(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.systemDefaultReset();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.systemDefaultReset();
+            return result;
         }
     }
 }

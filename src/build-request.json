@@ -1,73 +1,73 @@
 {
   "kind": "build_request",
-  "title": "Fix file downloads so original filenames are preserved (not generic \"download\")",
-  "priority": "high",
+  "title": "Polish expiration wording and make paste upload progress immediate and more professional",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the client-side download flow so that when a user clicks “Download” on any uploaded file, the browser download prompt and the saved file name use the original uploaded filename (including extension) rather than a generic name like \"download\" across all file types.",
+      "text": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-8"
+          "recent-messages-4"
         ],
         "quotes": [
-          "No 2. Still generic name comes for all download. Apply fix for all upload",
-          "I am ready.  Proceed"
+          "Remove the left word as we have expire word."
         ]
       },
       "acceptanceCriteria": [
-        "On the paste view page, downloading any file results in a download that uses the original uploaded filename (or the computed fallback filename) rather than a generic \"download\" name.",
-        "Works for all uploaded file types supported by the app (e.g., pdf/png/zip/jpg and others), not only specific extensions.",
-        "The filename shown in the browser's download confirmation/prompt matches the original uploaded name whenever it exists."
+        "On PasteViewPage, the expiration label does not contain the word “left”.",
+        "Expiration label examples render as “Expires in 9 min”, “Expires in 1 hr 10 min”, “Expires in 2 days 5 hrs” (no trailing/duplicate wording).",
+        "No other UI text regresses into awkward phrasing such as “Expires in Less than 1 min left”."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Harden the `downloadExternalBlob` implementation to avoid browsers (notably mobile Chromium/Brave) falling back to a generic filename by adjusting the timing of Object URL cleanup and ensuring the `download` attribute is applied in the most compatible way.",
+      "text": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-messages-4"
         ],
         "quotes": [
-          "Still generic name comes for all download."
+          "When press create paste button, button goes in loading then after some time loading progress bar comes show upload progress. This experience should be more professional."
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/utils/fileDownload.ts` no longer revokes the Object URL immediately in a way that can race the download; cleanup happens after the download has reliably started (e.g., delayed cleanup).",
-        "The anchor element uses the computed filename and sets it in a browser-compatible manner (property + attribute) before triggering the click.",
-        "No regressions: downloads still start successfully and memory cleanup (URL revocation + DOM removal) still occurs."
+        "When the user clicks “Create Paste”, an in-form status/progress panel becomes visible immediately (within the same tick/frame) and stays visible through upload + final paste creation.",
+        "If file reading/preparation time occurs before upload progress callbacks start, the UI shows a clear intermediate status (e.g., “Preparing files…” or equivalent) instead of appearing idle.",
+        "The “Create Paste” button remains disabled during the entire operation to prevent duplicate submissions, and the status panel is the primary indicator (not a delayed secondary indicator)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Ensure the paste view always passes the correct stored file metadata (filename and contentType) into the download utility for every file chunk, and that the computed fallback filename logic is used when metadata is missing or incomplete.",
-      "target": "frontend",
+      "text": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-4"
+          "recent-messages-4"
         ],
         "quotes": [
-          "Apply fix for all upload"
+          "Also upload is slow."
         ]
       },
       "acceptanceCriteria": [
-        "For file chunks with a stored filename, the download utility is invoked with that filename (and contentType when present).",
-        "For older pastes or missing metadata, the download filename uses the existing fallback rules (including MIME-based extension inference) and does not produce the literal name \"download\" unless that was actually stored as the filename.",
-        "UI behavior remains unchanged aside from corrected downloaded filename behavior (same Download button locations and loading state)."
+        "Time-to-first-user-feedback is improved: users see immediate status feedback on submit even before byte-level upload progress begins.",
+        "Time-to-first-upload-progress event is minimized (e.g., by restructuring the client flow to begin progress reporting earlier and avoiding unnecessary blocking work before starting the upload).",
+        "Upload still enforces the existing 50MB per-file limit and errors remain user-friendly in English.",
+        "No changes require additional backend canisters or external services; the system remains single-actor on the backend."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under `frontend/src/hooks/useInternetIdentity.ts` / `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or any files in `frontend/src/components/ui` (compose them instead).",
-    "Backend remains single-actor Motoko (`backend/main.mo`). Only add `backend/migration.mo` changes if state schema changes are required (not expected for this fix)."
+    "Do not edit files under frontend/src/components/ui (compose existing shadcn components instead).",
+    "Do not modify immutable hook files: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add backend/migration.mo if a stable-state upgrade is required."
   ],
   "nonGoals": [
-    "Adding third-party storage, CDN downloads, or external databases.",
-    "Implementing new authentication methods beyond Internet Identity.",
-    "Changing paste creation/expiration features or UI redesign unrelated to download filename preservation."
+    "Adding new authentication providers (only Internet Identity is supported).",
+    "Implementing real-time features (WebSockets/push).",
+    "Introducing external databases or third-party storage services."
   ],
   "imageRequirements": {
     "required": [],

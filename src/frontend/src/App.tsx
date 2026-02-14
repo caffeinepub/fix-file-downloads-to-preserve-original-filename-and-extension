@@ -5,6 +5,7 @@ import PasteViewPage from './pages/PasteViewPage';
 import AppLayout from './components/AppLayout';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
+import { extractPasteIdFromRoute } from './utils/pasteIds';
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState<{ path: string; params?: Record<string, string> }>({
@@ -14,14 +15,25 @@ function App() {
   useEffect(() => {
     const handleRouteChange = () => {
       const hash = window.location.hash.slice(1) || '/';
-      const [path, queryString] = hash.split('?');
+      
+      // Split hash to separate path from query string
+      const [pathPart] = hash.split('?');
       
       // Parse route params for /p/:id pattern
-      const pasteMatch = path.match(/^\/p\/(.+)$/);
+      const pasteMatch = pathPart.match(/^\/p\/(.+)$/);
       if (pasteMatch) {
-        setCurrentRoute({ path: '/p/:id', params: { id: pasteMatch[1] } });
+        // Extract and normalize the paste ID from the raw segment
+        const rawSegment = pasteMatch[1];
+        const normalizedId = extractPasteIdFromRoute(rawSegment);
+        
+        if (normalizedId) {
+          setCurrentRoute({ path: '/p/:id', params: { id: normalizedId } });
+        } else {
+          // If extraction results in empty string, default to create page
+          setCurrentRoute({ path: '/' });
+        }
       } else {
-        setCurrentRoute({ path });
+        setCurrentRoute({ path: pathPart });
       }
     };
 

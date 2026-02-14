@@ -73,6 +73,9 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'clearAllPastes' : IDL.Func([], [], []),
+  'clearLegacyIdMap' : IDL.Func([], [], []),
+  'clearUserProfiles' : IDL.Func([], [], []),
   'createPaste' : IDL.Func([IDL.Vec(PasteChunk), IDL.Text], [IDL.Text], []),
   'deleteExpiredPastes' : IDL.Func([], [], []),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -102,6 +105,8 @@ export const idlService = IDL.Service({
       [FileChunk],
       [],
     ),
+  'systemDefaultCheck' : IDL.Func([], [], ['query']),
+  'systemDefaultReset' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -166,6 +171,9 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'clearAllPastes' : IDL.Func([], [], []),
+    'clearLegacyIdMap' : IDL.Func([], [], []),
+    'clearUserProfiles' : IDL.Func([], [], []),
     'createPaste' : IDL.Func([IDL.Vec(PasteChunk), IDL.Text], [IDL.Text], []),
     'deleteExpiredPastes' : IDL.Func([], [], []),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -195,6 +203,8 @@ export const idlFactory = ({ IDL }) => {
         [FileChunk],
         [],
       ),
+    'systemDefaultCheck' : IDL.Func([], [], ['query']),
+    'systemDefaultReset' : IDL.Func([], [], []),
   });
 };
 

@@ -1,47 +1,48 @@
 import Map "mo:core/Map";
-import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 import Order "mo:core/Order";
-
+import Nat "mo:core/Nat";
 
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
 actor {
+  type CompatPasteId = Nat;
+  type CompatPasteIdMap = Map.Map<CompatPasteId, Text>;
+
+  var guidCounter = 0;
+
   let storageChunkSize = 2_000_000_000;
-  var nextPasteId = 0;
   let fileSizeLimit = 50_000_000;
-  let defaultExpiration = 86_400_000_000_000;
-  let oneWeekExpiration = 604_800_000_000_000;
-  let thirtyDayExpiration = 2_592_000_000_000_000;
+  let defaultExpiration : Int = 86_400_000_000_000;
+  let tenMinuteExpiration : Int = 600_000_000_000;
+  let oneWeekExpiration : Int = 604_800_000_000_000;
+  let thirtyDayExpiration : Int = 2_592_000_000_000_000;
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
   let pasteMap = Map.empty<Text, Paste>();
+  let legacyIdMap = Map.empty<CompatPasteId, Text>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+
+  func generateGUID() : Text {
+    guidCounter += 1;
+    (Time.now() + guidCounter).toText();
+  };
 
   public type Paste = { expirationTime : Int; items : [PasteChunk] };
   public type UserProfile = { name : Text };
   public type PasteChunk = { #text : Text; #file : FileChunk };
   public type FileChunk = { data : Storage.ExternalBlob; filename : Text; contentType : ?Text };
   public type PasteChunkType = { #file; #text };
-
-  module Paste {
-    public func compare(paste1 : (Text, Paste), paste2 : (Text, Paste)) : Order.Order {
-      if (paste1.1.expirationTime < paste2.1.expirationTime) { #less } else {
-        #greater;
-      };
-    };
-  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -70,20 +71,34 @@ actor {
     };
 
     let expirationTime = switch (expirationType) {
+      case ("10min") { Time.now() + tenMinuteExpiration };
       case ("7days") { Time.now() + oneWeekExpiration };
       case ("30days") { Time.now() + thirtyDayExpiration };
       case (_) { Time.now() + defaultExpiration };
     };
 
     let paste = { items = chunks; expirationTime };
-    let id = nextPasteId.toText();
-    nextPasteId += 1;
+    let id = generateGUID();
     pasteMap.add(id, paste);
     id;
   };
 
+  func resolvePasteId(pasteId : Text) : Text {
+    let maybeLegacyId = Nat.fromText(pasteId);
+    switch (maybeLegacyId) {
+      case (?legacyId) {
+        switch (legacyIdMap.get(legacyId)) {
+          case (?mappedId) { mappedId };
+          case (null) { pasteId };
+        };
+      };
+      case (null) { pasteId };
+    };
+  };
+
   public query ({ caller }) func getPaste(pasteId : Text) : async Paste {
-    switch (pasteMap.get(pasteId)) {
+    // No authorization check - anyone with the link can view pastes (including guests)
+    switch (pasteMap.get(resolvePasteId(pasteId))) {
       case (?paste) {
         if (Time.now() > paste.expirationTime) {
           Runtime.trap("Paste has expired");
@@ -95,7 +110,8 @@ actor {
   };
 
   public query ({ caller }) func getPasteChunksWithTypes(pasteId : Text) : async [(PasteChunk, PasteChunkType)] {
-    switch (pasteMap.get(pasteId)) {
+    // No authorization check - anyone with the link can view pastes (including guests)
+    switch (pasteMap.get(resolvePasteId(pasteId))) {
       case (?paste) {
         if (Time.now() > paste.expirationTime) {
           Runtime.trap("Paste has expired");
@@ -129,6 +145,9 @@ actor {
   };
 
   public query ({ caller }) func listActivePastes() : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can list pastes");
+    };
     pasteMap.entries().toArray().filter(
       func((_, paste)) { Time.now() <= paste.expirationTime }
     ).map<(Text, Paste), Text>(func((id, _)) { id });
@@ -148,7 +167,8 @@ actor {
   };
 
   public query ({ caller }) func getRemainingTime(pasteId : Text) : async Int {
-    switch (pasteMap.get(pasteId)) {
+    // No authorization check - anyone viewing a paste can see its expiration time
+    switch (pasteMap.get(resolvePasteId(pasteId))) {
       case (?paste) {
         if (Time.now() > paste.expirationTime) { 0 } else {
           paste.expirationTime - Time.now();
@@ -159,7 +179,8 @@ actor {
   };
 
   public query ({ caller }) func getFileMetadata(pasteId : Text) : async [(Text, ?Text)] {
-    switch (pasteMap.get(pasteId)) {
+    // No authorization check - anyone viewing a paste can see file metadata
+    switch (pasteMap.get(resolvePasteId(pasteId))) {
       case (?paste) {
         if (Time.now() > paste.expirationTime) {
           Runtime.trap("Paste has expired");
@@ -184,5 +205,46 @@ actor {
       };
       case (null) { Runtime.trap("Paste does not exist or has expired") };
     };
+  };
+
+  // Reset all default values.
+  public shared ({ caller }) func systemDefaultReset() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    guidCounter := 0;
+  };
+
+  public query ({ caller }) func systemDefaultCheck() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    if (guidCounter != 0) {
+      Runtime.trap("Default settings have been changed. Please reset. ");
+    };
+  };
+
+  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
+  public shared ({ caller }) func clearAllPastes() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    pasteMap.clear();
+  };
+
+  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
+  public shared ({ caller }) func clearLegacyIdMap() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    legacyIdMap.clear();
+  };
+
+  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
+  public shared ({ caller }) func clearUserProfiles() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    userProfiles.clear();
   };
 };

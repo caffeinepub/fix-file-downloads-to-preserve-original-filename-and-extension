@@ -44,6 +44,9 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    clearAllPastes(): Promise<void>;
+    clearLegacyIdMap(): Promise<void>;
+    clearUserProfiles(): Promise<void>;
     createPaste(chunks: Array<PasteChunk>, expirationType: string): Promise<string>;
     deleteExpiredPastes(): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -57,4 +60,6 @@ export interface backendInterface {
     listActivePastes(): Promise<Array<string>>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     saveFile(blob: ExternalBlob, filename: string, contentType: string | null): Promise<FileChunk>;
+    systemDefaultCheck(): Promise<void>;
+    systemDefaultReset(): Promise<void>;
 }
