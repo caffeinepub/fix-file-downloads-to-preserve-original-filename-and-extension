@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T18:59:42.996Z",
+  "generatedAt": "2026-02-16T19:10:53.344Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,56 +12,61 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
+        "summary": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/formatRemainingTime.ts",
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/components/UploadProgressStatus.tsx",
           "frontend/src/pages/PasteViewPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/formatRemainingTime.ts"
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/components/UploadProgressStatus.tsx",
+          "frontend/src/pages/PasteViewPage.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
+        "summary": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/UploadProgressStatus.tsx",
-          "frontend/src/pages/CreatePastePage.tsx"
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/components/AppLayout.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/UploadProgressStatus.tsx",
-          "frontend/src/pages/CreatePastePage.tsx"
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/components/AppLayout.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
+        "summary": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/pages/PasteViewPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx"
+          "frontend/src/index.css",
+          "frontend/src/pages/CreatePastePage.tsx",
+          "frontend/src/pages/PasteViewPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
+    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/components/AppLayout.tsx",
     "frontend/src/components/UploadProgressStatus.tsx",
-    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/config.ts",
+    "frontend/src/index.css",
     "frontend/src/pages/CreatePastePage.tsx",
-    "frontend/src/utils/formatRemainingTime.ts",
+    "frontend/src/pages/PasteViewPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

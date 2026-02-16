@@ -1,73 +1,73 @@
 {
   "kind": "build_request",
-  "title": "Polish expiration wording and make paste upload progress immediate and more professional",
+  "title": "Fix mobile filename overflow and polish home page UI",
+  "projectName": "PasteBin",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
+      "text": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-6"
         ],
         "quotes": [
-          "Remove the left word as we have expire word."
+          "file name is going outside on mobile devices. It's not responsive."
         ]
       },
       "acceptanceCriteria": [
-        "On PasteViewPage, the expiration label does not contain the word “left”.",
-        "Expiration label examples render as “Expires in 9 min”, “Expires in 1 hr 10 min”, “Expires in 2 days 5 hrs” (no trailing/duplicate wording).",
-        "No other UI text regresses into awkward phrasing such as “Expires in Less than 1 min left”."
+        "On ~360px-wide screens, long filenames remain fully contained within the card/list row without horizontal scrolling.",
+        "CreatePastePage selected-files rows remain readable on mobile (filename truncates or wraps) and action buttons (remove) remain reachable without pushing content outside the container.",
+        "UploadProgressStatus filename line does not expand the card beyond the viewport; the filename truncates cleanly on small screens.",
+        "PasteViewPage file rows remain within the viewport on mobile; if necessary, the Download button stacks below the filename on small screens while remaining aligned inline on larger screens."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
+      "text": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-6"
         ],
         "quotes": [
-          "When press create paste button, button goes in loading then after some time loading progress bar comes show upload progress. This experience should be more professional."
+          "Also work on home page to give it more professional look"
         ]
       },
       "acceptanceCriteria": [
-        "When the user clicks “Create Paste”, an in-form status/progress panel becomes visible immediately (within the same tick/frame) and stays visible through upload + final paste creation.",
-        "If file reading/preparation time occurs before upload progress callbacks start, the UI shows a clear intermediate status (e.g., “Preparing files…” or equivalent) instead of appearing idle.",
-        "The “Create Paste” button remains disabled during the entire operation to prevent duplicate submissions, and the status panel is the primary indicator (not a delayed secondary indicator)."
+        "Home/create page presents a clearer hierarchy (distinct hero/intro vs form area) with consistent spacing and alignment.",
+        "No functionality changes: users can still enter a message, upload files, select expiration, and create a paste as before.",
+        "Design remains consistent and polished in both light and dark themes (no low-contrast text, no clashing surfaces)."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
-      "target": "both",
+      "text": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-6"
         ],
         "quotes": [
-          "Also upload is slow."
+          "work on home page to give it more professional look"
         ]
       },
       "acceptanceCriteria": [
-        "Time-to-first-user-feedback is improved: users see immediate status feedback on submit even before byte-level upload progress begins.",
-        "Time-to-first-upload-progress event is minimized (e.g., by restructuring the client flow to begin progress reporting earlier and avoiding unnecessary blocking work before starting the upload).",
-        "Upload still enforces the existing 50MB per-file limit and errors remain user-friendly in English.",
-        "No changes require additional backend canisters or external services; the system remains single-actor on the backend."
+        "Cards, headings, descriptions, and action buttons follow a consistent styling approach (spacing, border treatment, and emphasis states).",
+        "No new feature behavior is introduced; changes are purely presentational.",
+        "The updated styling does not reduce usability on mobile (tap targets remain usable and content remains legible)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (compose existing shadcn components instead).",
-    "Do not modify immutable hook files: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add backend/migration.mo if a stable-state upgrade is required."
+    "Frontend immutable paths must not be modified: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Keep the backend (Motoko) logic and data model unchanged for this request."
   ],
   "nonGoals": [
-    "Adding new authentication providers (only Internet Identity is supported).",
-    "Implementing real-time features (WebSockets/push).",
-    "Introducing external databases or third-party storage services."
+    "Adding new backend endpoints or changing paste/file storage behavior.",
+    "Adding new authentication providers (Internet Identity remains the only auth).",
+    "Implementing real-time features (e.g., upload streaming via WebSockets) beyond current behavior."
   ],
   "imageRequirements": {
     "required": [],

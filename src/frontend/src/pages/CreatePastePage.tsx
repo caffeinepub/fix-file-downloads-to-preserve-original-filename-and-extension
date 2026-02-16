@@ -149,7 +149,7 @@ export default function CreatePastePage() {
   if (shareUrl) {
     return (
       <div className="max-w-2xl mx-auto">
-        <Card className="border-2 border-primary/20">
+        <Card className="app-card-elevated">
           <CardHeader>
             <CardTitle className="text-2xl">Paste Created Successfully</CardTitle>
             <CardDescription>Share this link with anyone to give them access</CardDescription>
@@ -179,52 +179,61 @@ export default function CreatePastePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Share Content Securely</CardTitle>
-            <CardDescription>
-              Create temporary, link-based shares for text and files
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 py-4">
-              <div className="flex gap-3">
+      <div className="max-w-3xl mx-auto space-y-8">
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Share Content Securely
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Create temporary, link-based shares for text and files with automatic expiration
+          </p>
+        </div>
+
+        <Card className="app-card">
+          <CardContent className="pt-8">
+            <div className="grid gap-6 mb-8">
+              <div className="flex gap-4">
                 <div className="shrink-0 mt-1">
-                  <Link2 className="h-5 w-5 text-primary" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Link2 className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium mb-1">Share via Link</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-base">Share via Link</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Create a unique link to share text messages and files with anyone
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <div className="shrink-0 mt-1">
-                  <Shield className="h-5 w-5 text-primary" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium mb-1">Anyone with the Link Can View</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-base">Anyone with the Link Can View</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     No login required for viewers — just share the link and they're in
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <div className="shrink-0 mt-1">
-                  <Clock className="h-5 w-5 text-primary" />
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium mb-1">Automatic Expiration</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-base">Automatic Expiration</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
                     Content automatically expires after your chosen time period for limited-time access
                   </p>
                 </div>
               </div>
             </div>
-            <Alert>
-              <AlertDescription className="text-center py-4">
+            <Alert className="bg-primary/5 border-primary/20">
+              <AlertDescription className="text-center py-3">
                 Please log in to create a paste. Anyone with the link will be able to view it without logging in.
               </AlertDescription>
             </Alert>
@@ -237,45 +246,54 @@ export default function CreatePastePage() {
   const isCreating = createPasteMutation.isPending;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Share Content Securely</CardTitle>
-          <CardDescription>
-            Create temporary, link-based shares for text and files
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 py-4 mb-6 border-b pb-6">
-            <div className="flex gap-3">
+    <div className="max-w-3xl mx-auto space-y-8">
+      <div className="text-center space-y-3">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+          Share Content Securely
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Create temporary, link-based shares for text and files with automatic expiration
+        </p>
+      </div>
+
+      <Card className="app-card">
+        <CardContent className="pt-8">
+          <div className="grid gap-6 pb-8 mb-8 border-b">
+            <div className="flex gap-4">
               <div className="shrink-0 mt-1">
-                <Link2 className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Link2 className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium mb-1">Share via Link</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-base">Share via Link</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Create a unique link to share text messages and files with anyone
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <div className="shrink-0 mt-1">
-                <Shield className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium mb-1">Anyone with the Link Can View</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-base">Anyone with the Link Can View</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   No login required for viewers — just share the link and they're in
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <div className="shrink-0 mt-1">
-                <Clock className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
               </div>
-              <div>
-                <h3 className="font-medium mb-1">Automatic Expiration</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="space-y-1">
+                <h3 className="font-semibold text-base">Automatic Expiration</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   Content automatically expires after your chosen time period for limited-time access
                 </p>
               </div>
@@ -300,7 +318,7 @@ export default function CreatePastePage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="message">Message</Label>
+              <Label htmlFor="message" className="text-base font-semibold">Message</Label>
               <Textarea
                 id="message"
                 placeholder="Enter your message here..."
@@ -312,9 +330,9 @@ export default function CreatePastePage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="files">Files (optional)</Label>
-              <div className={`border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors ${
+            <div className="space-y-3">
+              <Label htmlFor="files" className="text-base font-semibold">Files (optional)</Label>
+              <div className={`border-2 border-dashed border-border rounded-lg p-8 text-center transition-colors ${
                 isCreating ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50 cursor-pointer'
               }`}>
                 <input
@@ -326,7 +344,7 @@ export default function CreatePastePage() {
                   disabled={isCreating}
                 />
                 <label htmlFor="files" className={isCreating ? 'cursor-not-allowed' : 'cursor-pointer'}>
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
                     Click to upload files (max {MAX_FILE_SIZE_MB}MB per file)
                   </p>
@@ -338,25 +356,27 @@ export default function CreatePastePage() {
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-muted rounded-lg"
                     >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm truncate">{file.name}</span>
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
+                        <span className="text-sm truncate flex-1 min-w-0">{file.name}</span>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                        className="shrink-0"
-                        disabled={isCreating}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-between sm:justify-end gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="shrink-0 h-8 w-8 p-0"
+                          disabled={isCreating}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -364,7 +384,7 @@ export default function CreatePastePage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expiration">Expiration</Label>
+              <Label htmlFor="expiration" className="text-base font-semibold">Expiration</Label>
               <Select 
                 value={expirationType} 
                 onValueChange={setExpirationType}
@@ -384,12 +404,12 @@ export default function CreatePastePage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-12 text-base"
               disabled={isCreating}
             >
               {isCreating ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Creating...
                 </>
               ) : (

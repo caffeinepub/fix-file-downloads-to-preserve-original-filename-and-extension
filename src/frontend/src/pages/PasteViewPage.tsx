@@ -91,17 +91,17 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Card>
+      <Card className="app-card">
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
               <CardTitle className="text-2xl">Shared Paste</CardTitle>
               <CardDescription>View and download shared content</CardDescription>
             </div>
             {remainingTime > 0n && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Expires in {formatRemainingTime(remainingTime)}</span>
+                <Clock className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Expires in {formatRemainingTime(remainingTime)}</span>
               </div>
             )}
           </div>
@@ -109,7 +109,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
         <CardContent className="space-y-6">
           {textChunks.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Message</h3>
+              <h3 className="text-sm font-semibold text-foreground">Message</h3>
               <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap break-words">
                 {textChunks[0].content}
               </div>
@@ -120,7 +120,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
 
           {fileChunks.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
+              <h3 className="text-sm font-semibold text-foreground">
                 Files ({fileChunks.length})
               </h3>
               <div className="space-y-2">
@@ -132,17 +132,17 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
                   return (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <span className="text-sm truncate">{displayName}</span>
+                        <span className="text-sm truncate flex-1 min-w-0">{displayName}</span>
                       </div>
                       <Button
                         onClick={() => handleDownload(chunk.blob, chunk.filename, chunk.contentType, index)}
                         variant="outline"
                         size="sm"
-                        className="gap-2 shrink-0"
+                        className="gap-2 shrink-0 w-full sm:w-auto"
                         disabled={isDownloading}
                       >
                         {isDownloading ? (

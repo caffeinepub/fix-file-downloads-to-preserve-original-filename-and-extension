@@ -17,7 +17,7 @@ export default function AppLayout({ children, currentPath }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <button
             onClick={handleLogoClick}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
@@ -25,18 +25,18 @@ export default function AppLayout({ children, currentPath }: AppLayoutProps) {
             <img
               src="/assets/generated/logo-mark.dim_512x512.png"
               alt="PasteBin"
-              className="h-10 w-10"
+              className="h-10 w-10 shrink-0"
             />
             <div className="flex flex-col items-start">
               <h1 className="text-xl font-bold text-foreground">PasteBin</h1>
-              <p className="text-xs text-muted-foreground">Share files securely</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">Share files securely</p>
             </div>
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {isAuthenticated && currentPath !== '/' && (
               <button
                 onClick={handleLogoClick}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
               >
                 Create New
               </button>
@@ -46,12 +46,12 @@ export default function AppLayout({ children, currentPath }: AppLayoutProps) {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {children}
       </main>
 
       <footer className="border-t border-border bg-card/30 py-6 mt-auto">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+        <div className="container mx-auto px-4 sm:px-6 text-center text-sm text-muted-foreground">
           <p>
             © {new Date().getFullYear()} · Built with{' '}
             <span className="text-red-500">♥</span> using{' '}

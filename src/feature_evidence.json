@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-the-redundant-word-left-from-the-paste-expiration-ui-so-the-expiry-message-reads-naturally-e-g-expires-in-9-min-not-expires-in-9-min-left",
-      "featureTitle": "Remove the redundant word “left” from the paste expiration UI so the expiry message reads naturally (e.g., “Expires in 9 min”, not “Expires in 9 min left”).",
+      "featureId": "feature-fix-mobile-responsiveness-so-long-filenames-never-overflow-outside-the-layout-in-all-places-filenames-are-displayed-selected-file-list-on-the-home-create-page-upload-progress-status-card-and-file-list-on-the-paste-view-page-use-responsive-layout-rules-e-g-allow-wrapping-stacking-on-small-screens-ensure-flex-children-have-min-width-0-and-apply-truncation-or-break-word-behavior-as-appropriate-so-the-ui-stays-within-the-viewport-on-narrow-devices",
+      "featureTitle": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
       "files": [
-        "frontend/src/utils/formatRemainingTime.ts"
+        "frontend/src/components/UploadProgressStatus.tsx",
+        "frontend/src/pages/CreatePastePage.tsx",
+        "frontend/src/pages/PasteViewPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,11 +24,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-improve-the-paste-creation-ux-so-upload-progress-feedback-appears-immediately-when-the-user-clicks-create-paste-without-an-initial-period-where-only-the-button-is-loading-and-the-progress-ui-appears-later",
-      "featureTitle": "Improve the paste creation UX so upload/progress feedback appears immediately when the user clicks “Create Paste”, without an initial period where only the button is loading and the progress UI appears later.",
+      "featureId": "feature-update-the-home-page-createpastepage-at-route-to-look-more-professional-through-ui-ux-polish-only-improve-visual-hierarchy-spacing-typography-and-section-structure-for-the-hero-intro-and-the-create-form-while-keeping-the-existing-functionality-and-wording-intent-ensure-the-page-feels-cohesive-in-both-light-and-dark-mode",
+      "featureTitle": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
       "files": [
-        "frontend/src/components/UploadProgressStatus.tsx",
-        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/components/AppLayout.tsx",
         "frontend/src/pages/CreatePastePage.tsx"
       ],
       "components": [
@@ -44,11 +45,12 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-investigate-and-improve-slow-upload-performance-for-file-pastes-focusing-on-reducing-time-to-first-progress-and-overall-upload-time-where-possible-without-changing-the-50mb-per-file-limit-behavior",
-      "featureTitle": "Investigate and improve slow upload performance for file pastes, focusing on reducing time-to-first-progress and overall upload time where possible, without changing the 50MB per-file limit behavior.",
+      "featureId": "feature-apply-a-single-coherent-visual-theme-across-the-home-create-page-and-paste-view-page-to-reinforce-a-professional-look-e-g-a-neutral-modern-editorial-style-with-subtle-borders-consistent-card-elevation-and-restrained-accent-usage-enforce-the-theme-consistently-across-key-components-without-introducing-new-product-features",
+      "featureTitle": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CreatePastePage.tsx"
+        "frontend/src/index.css",
+        "frontend/src/pages/CreatePastePage.tsx",
+        "frontend/src/pages/PasteViewPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",

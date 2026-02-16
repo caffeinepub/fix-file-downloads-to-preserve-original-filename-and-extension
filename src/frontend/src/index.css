@@ -4,7 +4,7 @@
 
 @layer base {
     :root {
-        --radius: 0.625rem;
+        --radius: 0.75rem;
         --background: 0.98 0.005 60;
         --foreground: 0.25 0.015 60;
         --card: 1 0 0;
@@ -65,5 +65,16 @@
     body {
         @apply bg-background text-foreground;
         font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
+
+@layer components {
+    /* Shared card styling for consistent appearance */
+    .app-card {
+        @apply border border-border bg-card shadow-soft;
+    }
+
+    .app-card-elevated {
+        @apply border-2 border-primary/20 bg-card shadow-medium;
     }
 }

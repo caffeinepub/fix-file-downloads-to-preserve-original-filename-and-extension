@@ -1,74 +1,79 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Polish expiration copy and make paste creation progress immediate",
+  "title": "PasteBin mobile filename overflow fixes + home/paste UI polish",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove redundant “left” wording from the paste expiration label so it reads naturally.",
+      "summary": "Prevent long filenames from overflowing on mobile across selected-files list, upload progress card, and paste file list using responsive flex/min-width and truncation/wrapping rules.",
       "acceptanceCriteria": [
-        "On PasteViewPage, the expiration label does not contain the word “left”.",
-        "Expiration label examples render as “Expires in 9 min”, “Expires in 1 hr 10 min”, “Expires in 2 days 5 hrs” (no trailing/duplicate wording).",
-        "No other UI text regresses into awkward phrasing such as “Expires in Less than 1 min left”."
+        "On ~360px-wide screens, long filenames remain fully contained within the card/list row without horizontal scrolling.",
+        "CreatePastePage selected-files rows remain readable on mobile (filename truncates or wraps) and action buttons (remove) remain reachable without pushing content outside the container.",
+        "UploadProgressStatus filename line does not expand the card beyond the viewport; the filename truncates cleanly on small screens.",
+        "PasteViewPage file rows remain within the viewport on mobile; if necessary, the Download button stacks below the filename on small screens while remaining aligned inline on larger screens."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/formatRemainingTime.ts",
+          "path": "frontend/src/pages/CreatePastePage.tsx",
           "operation": "modify",
-          "description": "Update remaining-time formatting to return strings without trailing “left” (e.g., “9 min”, “1 hr 10 min”, “2 days 5 hrs”, “Less than 1 min”), keeping pluralization correct."
+          "description": "Update the selected-files row layout to be mobile-safe: ensure flex children use min-w-0, apply truncation or wrap-safe word breaking to filenames, and allow responsive stacking (e.g., row becomes column on small screens) so the remove button remains reachable without pushing content outside the container. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/UploadProgressStatus.tsx",
+          "operation": "modify",
+          "description": "Harden the upload progress status card against filename overflow: add min-w-0 to the filename container, keep the filename line truncating within available space, and ensure the percentage label cannot force horizontal overflow on narrow screens. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/PasteViewPage.tsx",
           "operation": "modify",
-          "description": "Ensure the expiration label composes cleanly as “Expires in {formatRemainingTime(...) }” with no duplicate wording after the formatter change."
+          "description": "Make paste file rows responsive: ensure filename container uses min-w-0 with truncation/word-break, and on small screens switch to a stacked layout where the Download button can move below the filename while remaining inline-aligned on larger screens. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Show an in-form status/progress panel immediately on “Create Paste” click, including a clear pre-upload preparation state.",
+      "summary": "Polish the home/create page UI (route “/”) with improved hierarchy, spacing, and typography while preserving all existing functionality and wording intent across light/dark mode.",
       "acceptanceCriteria": [
-        "When the user clicks “Create Paste”, an in-form status/progress panel becomes visible immediately (within the same tick/frame) and stays visible through upload + final paste creation.",
-        "If file reading/preparation time occurs before upload progress callbacks start, the UI shows a clear intermediate status (e.g., “Preparing files…” or equivalent) instead of appearing idle.",
-        "The “Create Paste” button remains disabled during the entire operation to prevent duplicate submissions, and the status panel is the primary indicator (not a delayed secondary indicator)."
+        "Home/create page presents a clearer hierarchy (distinct hero/intro vs form area) with consistent spacing and alignment.",
+        "No functionality changes: users can still enter a message, upload files, select expiration, and create a paste as before.",
+        "Design remains consistent and polished in both light and dark themes (no low-contrast text, no clashing surfaces)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Extend the UploadProgress model to include a pre-upload stage (e.g., “preparing”) and invoke the progress callback immediately at mutation start and before each potentially slow file-read step, so the UI can render feedback before byte-level upload progress begins. Use the blob-storage ExternalBlob progress capability already available (Verify the component's usage instructions before implementing)."
-        },
-        {
-          "path": "frontend/src/components/UploadProgressStatus.tsx",
-          "operation": "modify",
-          "description": "Add UI handling for the new pre-upload stage (e.g., show “Preparing files…” / “Preparing file X of Y”, with an appropriate loader and/or non-advancing progress presentation) while keeping existing uploading/creating states intact."
-        },
-        {
           "path": "frontend/src/pages/CreatePastePage.tsx",
           "operation": "modify",
-          "description": "On form submit, set uploadProgress immediately to a preparing state before awaiting the mutation (and optionally yield one frame so React can paint), ensuring the status panel is visible right away and remains visible until completion/error; keep the submit button disabled for the whole operation."
+          "description": "Refine CreatePastePage layout and visual hierarchy: clearly separate hero/intro content from the create form area (spacing, section headings, consistent alignment), improve typography scale and rhythm, and adjust surfaces/borders to look more professional while keeping all flows and wording intent intact (including unauthenticated and success states). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AppLayout.tsx",
+          "operation": "modify",
+          "description": "Polish shared layout spacing and header/footer presentation to better support the updated home page hierarchy (e.g., container padding, header visual weight) while keeping navigation behavior unchanged and ensuring light/dark cohesion. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Reduce perceived and actual slow upload behavior by minimizing time-to-first-feedback and time-to-first-upload-progress while keeping the 50MB per-file limit and friendly errors.",
+      "summary": "Apply a consistent, modern visual theme across the home/create page and paste view page with uniform card/border/spacing/button styling, without changing behavior.",
       "acceptanceCriteria": [
-        "Time-to-first-user-feedback is improved: users see immediate status feedback on submit even before byte-level upload progress begins.",
-        "Time-to-first-upload-progress event is minimized (e.g., by restructuring the client flow to begin progress reporting earlier and avoiding unnecessary blocking work before starting the upload).",
-        "Upload still enforces the existing 50MB per-file limit and errors remain user-friendly in English.",
-        "No changes require additional backend canisters or external services; the system remains single-actor on the backend."
+        "Cards, headings, descriptions, and action buttons follow a consistent styling approach (spacing, border treatment, and emphasis states).",
+        "No new feature behavior is introduced; changes are purely presentational.",
+        "The updated styling does not reduce usability on mobile (tap targets remain usable and content remains legible)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Restructure the create-paste client flow to avoid unnecessary blocking before upload begins: emit “preparing” progress before reading each file into memory, and update progress stage transitions so users see continuous feedback from click → preparation → upload → finalization. Continue to leverage ExternalBlob.withUploadProgress for byte-level reporting during the upload (Verify the component's usage instructions before implementing)."
+          "description": "Introduce small, reusable theme utilities (e.g., a shared card/surface class and consistent section spacing helpers) using existing Tailwind layers so CreatePastePage and PasteViewPage can share a coherent border/elevation/typography treatment in both light and dark mode. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/CreatePastePage.tsx",
           "operation": "modify",
-          "description": "Keep existing 50MB per-file enforcement via pasteLimits and ensure any new intermediate/preparing messages remain clear and professional in English; ensure error handling continues to show friendly messages if preparation/upload fails."
+          "description": "Adopt the shared theme utilities for cards/sections/buttons on the home/create page to ensure consistent surfaces, borders, and emphasis states while keeping all behavior unchanged. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "operation": "modify",
+          "description": "Adopt the shared theme utilities for the paste view page (card, section headings, file rows, action buttons) to match the home/create page styling, ensuring mobile tap targets and readability remain strong. Verify the component's usage instructions before implementing."
         }
       ]
     }

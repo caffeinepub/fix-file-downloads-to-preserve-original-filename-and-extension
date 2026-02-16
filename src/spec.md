@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Polish paste expiration wording and make paste creation feedback appear immediately with clearer, more professional progress/status indicators, while improving perceived and actual upload responsiveness.
+**Goal:** Fix mobile layout issues where long filenames overflow, and polish the home/create and paste view pages to look more professional and visually consistent (light/dark mode), without changing functionality.
 
 **Planned changes:**
-- Update the PasteViewPage expiration label copy to remove the redundant word “left” and ensure natural phrasing across all expiration time formats.
-- Adjust the paste creation flow so an in-form status/progress panel appears immediately on “Create Paste” click, including an explicit intermediate “preparing” state when upload progress events haven’t started yet.
-- Keep the “Create Paste” button disabled for the full operation and make the status/progress panel the primary indicator to prevent a delayed/secondary progress UI.
-- Investigate and reduce delays before upload starts/progress events fire, while keeping the existing 50MB per-file limit and user-friendly English errors; make any necessary improvements across frontend/backend without adding new backend actors or external services.
+- Prevent long filenames from overflowing on small screens across all filename surfaces (CreatePastePage selected file list, upload progress status card, PasteViewPage file list) using responsive rules such as `min-width: 0` on flex children, wrapping/stacking on narrow viewports, and truncation or `break-word` where appropriate.
+- Adjust mobile layout for PasteViewPage file rows so actions (e.g., Download) can stack below the filename on small screens while staying inline on larger screens.
+- UI/UX polish for the home/create page (route “/”) to improve visual hierarchy between hero/intro and create form, plus spacing, typography, and section structure while keeping existing wording intent and all behaviors unchanged.
+- Apply a single coherent presentational theme across the home/create page and paste view page (consistent card styling, borders/elevation, spacing, headings, and button emphasis states) that remains legible and cohesive in both light and dark mode.
 
-**User-visible outcome:** Expiration messages read naturally (e.g., “Expires in 9 min”), and when creating a paste users see immediate, continuous status/progress feedback through preparation, upload, and final creation, with improved responsiveness for file uploads.
+**User-visible outcome:** On mobile devices, long filenames stay contained within cards/rows without horizontal overflow, and the home/create and paste view pages look cleaner and more professional with consistent styling across light and dark themes.
