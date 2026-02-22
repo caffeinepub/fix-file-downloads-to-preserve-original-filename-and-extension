@@ -81,6 +81,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
           <div className="max-w-4xl mx-auto">
             <ErrorState
               type="expired"
+              pasteId={pasteId}
               onRetry={() => refetch()}
               retryLabel="Retry Loading Paste"
             />
@@ -93,6 +94,8 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
           <div className="max-w-4xl mx-auto">
             <ErrorState
               type="not-found"
+              pasteId={pasteId}
+              details={error.message}
             />
           </div>
         );
@@ -103,6 +106,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
         <div className="max-w-4xl mx-auto">
           <ErrorState
             type="error"
+            pasteId={pasteId}
             onRetry={() => refetch()}
             details={error.message}
             retryLabel="Retry Loading Paste"
@@ -117,6 +121,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
       <div className="max-w-4xl mx-auto">
         <ErrorState
           type="error"
+          pasteId={pasteId}
           onRetry={() => refetch()}
           details={errorMessage}
           retryLabel="Retry Loading Paste"
@@ -130,6 +135,8 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
       <div className="max-w-4xl mx-auto">
         <ErrorState
           type="not-found"
+          pasteId={pasteId}
+          details="The paste returned null from the backend"
         />
       </div>
     );

@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the persistent error page that appears after paste creation and add comprehensive error logging to identify the root cause.
+**Goal:** Fix the paste not found error that occurs after creating a paste, ensuring pastes can be retrieved immediately after creation.
 
 **Planned changes:**
-- Add detailed error logging to the paste creation flow in useQueries.ts to capture backend errors, network failures, and response data
-- Verify backend createPaste method correctly returns paste IDs and handles file uploads, password protection, and expiration settings
-- Ensure frontend properly extracts paste ID from response and constructs correct redirect URL
-- Fix the error page issue so paste creation successfully redirects to the paste view page
+- Debug and fix backend paste storage to ensure pastes are properly stored and retrievable using their creation ID
+- Add backend logging to track paste ID generation, storage operations, and retrieval attempts
+- Verify paste ID type consistency between createPaste and getPaste functions
+- Improve frontend error handling to display detailed backend error messages including attempted paste ID
 
-**User-visible outcome:** Users can successfully create pastes without encountering an error page, and are immediately redirected to view their newly created paste.
+**User-visible outcome:** Users can successfully create and view pastes without encountering "paste not found" errors when navigating to newly created paste URLs.

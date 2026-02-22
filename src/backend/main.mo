@@ -310,6 +310,10 @@ actor {
     filename : Text,
     contentType : ?Text
   ) : async FileChunk {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can upload files");
+    };
+    
     if (blob.size() > fileSizeLimit) {
       Runtime.trap("File size exceeds the limit of 50MB");
     };

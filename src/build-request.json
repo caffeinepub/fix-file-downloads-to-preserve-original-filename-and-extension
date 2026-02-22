@@ -1,82 +1,81 @@
 {
   "kind": "build_request",
-  "title": "Fix persistent error page after paste creation",
+  "title": "Fix paste not found error after creation",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
-      "target": "both",
+      "text": "Debug and fix the backend paste storage issue where paste ID 1771799269632900371 is not being found after creation. Verify that the createPaste function properly stores the paste data in the backend canister's state and that the getPaste function can retrieve it using the same ID format.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-10"
         ],
         "quotes": [
-          "Still having the same issue and same error page."
+          "getting paste not found error after creating a paste link https://molecular-lavender-hsv-draft.caffeine.xyz/#/1771799269632900371"
         ]
       },
       "acceptanceCriteria": [
-        "Creating a new paste successfully redirects to the paste view page without error",
-        "No error page is displayed after paste creation",
-        "The paste is accessible at its generated URL"
+        "After creating a paste, navigating to its URL successfully displays the paste content",
+        "Backend getPaste function successfully retrieves pastes created by createPaste using the returned paste ID",
+        "No 'paste not found' errors occur for newly created pastes"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
-      "target": "frontend",
+      "text": "Add backend logging to the createPaste and getPaste functions to track paste ID generation, storage operations, and retrieval attempts. Log the paste ID format, storage confirmation, and any retrieval failures with diagnostic information.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-10"
         ]
       },
       "acceptanceCriteria": [
-        "Console logs show detailed error information when paste creation fails",
-        "Error messages include backend response details and error types",
-        "Error handling distinguishes between network failures, backend errors, and unexpected failures"
+        "Backend logs show paste ID when a paste is created",
+        "Backend logs show storage confirmation after paste is saved",
+        "Backend logs show retrieval attempts with the requested paste ID and whether it was found"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Verify that the backend createPaste method correctly returns paste IDs and handles all edge cases including file uploads, password protection, and expiration settings",
+      "text": "Verify that the paste ID type consistency between createPaste (which returns the ID) and getPaste (which accepts the ID as parameter) matches. Ensure both functions use the same ID representation (Nat vs Text vs custom type) throughout the storage and retrieval flow.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-10"
         ]
       },
       "acceptanceCriteria": [
-        "createPaste returns a valid paste ID for all valid input combinations",
-        "File uploads are correctly stored and associated with the paste",
-        "Password protection and expiration settings are properly applied",
-        "Backend logs show successful paste creation without errors"
+        "createPaste and getPaste use identical ID types",
+        "No type conversions or transformations occur between paste creation and retrieval that could cause ID mismatches",
+        "The paste storage map key type matches the ID type used in both functions"
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
+      "text": "Add frontend error handling to display detailed backend error messages when a paste is not found, including the attempted paste ID and any backend diagnostic information returned in the error response.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-10"
         ]
       },
       "acceptanceCriteria": [
-        "The paste ID from the backend response is correctly extracted",
-        "The redirect URL is properly formatted with the paste ID in the hash",
-        "Navigation to the paste view page occurs immediately after successful creation"
+        "PasteViewPage displays the attempted paste ID when showing 'not found' errors",
+        "Backend error messages are properly extracted and displayed to help diagnose the issue",
+        "Error state includes actionable information for debugging"
       ]
     }
   ],
   "constraints": [
-    "Do not modify the Internet Identity authentication flow",
-    "Preserve existing paste data and user profiles",
-    "Maintain backward compatibility with legacy paste IDs"
+    "Maintain backward compatibility with existing paste IDs",
+    "Do not modify the frontend paste ID validation logic which is working correctly",
+    "Preserve existing paste data structures and storage mechanisms"
   ],
   "nonGoals": [
-    "Changing the overall paste creation UI/UX",
-    "Modifying unrelated features like history page or paste viewing",
-    "Adding new paste features or capabilities"
+    "Changing the paste ID format or generation algorithm",
+    "Modifying the frontend routing or ID extraction logic",
+    "Adding new features beyond fixing the storage/retrieval bug"
   ],
   "imageRequirements": {
     "required": [],

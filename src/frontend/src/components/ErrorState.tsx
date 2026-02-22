@@ -4,12 +4,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ErrorStateProps {
   type: 'expired' | 'not-found' | 'error';
+  pasteId?: string;
   onRetry?: () => void;
   details?: string;
   retryLabel?: string;
 }
 
-export default function ErrorState({ type, onRetry, details, retryLabel = 'Retry' }: ErrorStateProps) {
+export default function ErrorState({ type, pasteId, onRetry, details, retryLabel = 'Retry' }: ErrorStateProps) {
   const config = {
     expired: {
       icon: Clock,
@@ -53,7 +54,28 @@ export default function ErrorState({ type, onRetry, details, retryLabel = 'Retry
         <h2 className="text-2xl font-bold">{title}</h2>
         <p className="text-muted-foreground max-w-md mx-auto">{message}</p>
         
-        {details && (
+        {pasteId && (
+          <Alert className="text-left max-w-md mx-auto mt-4">
+            <AlertDescription className="text-sm space-y-2">
+              <div>
+                <strong>Requested Paste ID:</strong>
+                <div className="mt-1 p-2 bg-muted rounded font-mono text-xs break-all">
+                  {pasteId}
+                </div>
+              </div>
+              {details && (
+                <div>
+                  <strong>Additional Info:</strong>
+                  <div className="mt-1 text-muted-foreground">
+                    {details}
+                  </div>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {!pasteId && details && (
           <Alert className="text-left max-w-md mx-auto mt-4">
             <AlertDescription className="text-sm">
               <strong>Details:</strong> {details}

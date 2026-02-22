@@ -2,56 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-investigate-and-fix-the-persistent-error-page-that-appears-after-attempting-to-create-a-paste-despite-version-14-deployment-addressing-the-previous-error",
-      "featureTitle": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
+      "featureId": "feature-add-frontend-error-handling-to-display-detailed-backend-error-messages-when-a-paste-is-not-found-including-the-attempted-paste-id-and-any-backend-diagnostic-information-returned-in-the-error-response",
+      "featureTitle": "Add frontend error handling to display detailed backend error messages when a paste is not found, including the attempted paste ID and any backend diagnostic information returned in the error response.",
       "files": [
-        "frontend/src/App.tsx",
+        "frontend/src/components/ErrorState.tsx",
         "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CreatePastePage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-comprehensive-error-logging-to-the-paste-creation-flow-in-usequeries-ts-to-capture-the-exact-error-occurring-during-paste-creation-including-backend-error-details-network-failures-and-response-data",
-      "featureTitle": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
-      "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/utils/backendError.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-frontend-properly-handles-the-paste-creation-response-and-correctly-constructs-the-redirect-url-using-the-returned-paste-id",
-      "featureTitle": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/CreatePastePage.tsx",
-        "frontend/src/utils/pasteIds.ts"
+        "frontend/src/pages/PasteViewPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",

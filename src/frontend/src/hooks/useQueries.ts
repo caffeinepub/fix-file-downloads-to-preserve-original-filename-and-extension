@@ -21,6 +21,7 @@ interface CreatePasteParams {
 export interface PasteError {
   type: 'expired' | 'not-found' | 'error';
   message: string;
+  pasteId?: string;
 }
 
 export function useCreatePaste() {
@@ -96,6 +97,20 @@ export function useCreatePaste() {
       console.log('[useCreatePaste] Calling createPaste with chunks:', chunks.length);
       const pasteId = await actor.createPaste(chunks, expirationType, password);
       console.log('[useCreatePaste] Backend returned paste ID:', pasteId, 'Type:', typeof pasteId);
+      console.log('[useCreatePaste] Verifying paste was stored by calling getPaste...');
+      
+      // Verify the paste was stored correctly
+      try {
+        const verifyPaste = await actor.getPaste(pasteId, password);
+        if (verifyPaste === null) {
+          console.error('[useCreatePaste] CRITICAL: Paste verification failed - getPaste returned null for ID:', pasteId);
+          console.error('[useCreatePaste] This indicates the paste was not stored in the backend pasteMap');
+        } else {
+          console.log('[useCreatePaste] Paste verification successful - paste exists in backend');
+        }
+      } catch (verifyError) {
+        console.error('[useCreatePaste] Paste verification error:', verifyError);
+      }
       
       return pasteId;
     },
@@ -143,27 +158,39 @@ export function useGetPaste(pasteId: string) {
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       
+      console.log('[useGetPaste] Fetching paste with ID:', pasteId);
+      console.log('[useGetPaste] Paste ID type:', typeof pasteId);
+      console.log('[useGetPaste] Paste ID length:', pasteId.length);
+      
       const paste = await actor.getPaste(pasteId, null);
+      
+      console.log('[useGetPaste] Backend response:', paste === null ? 'null' : 'paste object');
       
       // If paste is null, determine if it's expired or not found
       if (paste === null) {
+        console.log('[useGetPaste] Paste is null, checking remaining time to determine reason...');
         try {
           const remainingTime = await actor.getRemainingTime(pasteId);
+          console.log('[useGetPaste] Remaining time:', remainingTime.toString());
           
           // If remainingTime is 0, the paste exists but is expired
           if (remainingTime === BigInt(0)) {
+            console.log('[useGetPaste] Paste is expired (remainingTime = 0)');
             const error: PasteError = {
               type: 'expired',
-              message: 'Paste has expired'
+              message: 'Paste has expired',
+              pasteId,
             };
             throw error;
           }
           
           // If remainingTime is > 0 but paste is null, it might be password protected
           // or there's another access issue - treat as not found for now
+          console.log('[useGetPaste] Paste not found but remainingTime > 0 - possible password protection or access issue');
           const error: PasteError = {
             type: 'not-found',
-            message: 'Paste not found'
+            message: `Paste not found or access denied. Backend returned null for paste ID: ${pasteId}`,
+            pasteId,
           };
           throw error;
         } catch (err: any) {
@@ -173,14 +200,18 @@ export function useGetPaste(pasteId: string) {
           }
           
           // If getRemainingTime fails, the paste truly doesn't exist
+          console.log('[useGetPaste] getRemainingTime failed - paste does not exist in backend');
+          console.error('[useGetPaste] getRemainingTime error:', err);
           const error: PasteError = {
             type: 'not-found',
-            message: 'Paste does not exist'
+            message: `Paste does not exist in backend storage. Attempted ID: ${pasteId}. Backend error: ${err.message || 'Unknown'}`,
+            pasteId,
           };
           throw error;
         }
       }
       
+      console.log('[useGetPaste] Successfully retrieved paste');
       return paste;
     },
     enabled: !!actor && !isFetching && !!pasteId,
@@ -198,6 +229,25 @@ export function useIsPasteOwner(pasteId: string) {
       return actor.isPasteOwner(pasteId);
     },
     enabled: !!actor && !isFetching && !!pasteId,
+  });
+}
+
+export function useGetPassword(pasteId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['pastePassword', pasteId],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getPassword(pasteId);
+      } catch (err) {
+        console.error('[useGetPassword] Error fetching password:', err);
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && !!pasteId,
+    retry: false,
   });
 }
 
@@ -255,11 +305,46 @@ export function useGetRemainingTime(pasteId: string) {
   return useQuery({
     queryKey: ['remainingTime', pasteId],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return BigInt(0);
       return actor.getRemainingTime(pasteId);
     },
     enabled: !!actor && !isFetching && !!pasteId,
     refetchInterval: 60000, // Refetch every minute
+  });
+}
+
+export function useGetCallerUserProfile() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const query = useQuery({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserProfile();
+    },
+    enabled: !!actor && !actorFetching,
+    retry: false,
+  });
+
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && query.isFetched,
+  };
+}
+
+export function useSaveCallerUserProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (name: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.saveCallerUserProfile({ name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
   });
 }
 
@@ -269,26 +354,20 @@ export function useGetPasteHistory() {
   return useQuery({
     queryKey: ['pasteHistory'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return null;
       return actor.getPasteHistory();
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-export function useGetPassword(pasteId: string) {
-  const { actor, isFetching } = useActor();
+export function useSaveFile() {
+  const { actor } = useActor();
 
-  return useQuery({
-    queryKey: ['password', pasteId],
-    queryFn: async () => {
-      if (!actor) return null;
-      try {
-        return actor.getPassword(pasteId);
-      } catch {
-        return null;
-      }
+  return useMutation({
+    mutationFn: async ({ blob, filename, contentType }: { blob: ExternalBlob; filename: string; contentType: string | null }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.saveFile(blob, filename, contentType);
     },
-    enabled: !!actor && !isFetching && !!pasteId,
   });
 }

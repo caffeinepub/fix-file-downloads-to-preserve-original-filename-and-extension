@@ -1,83 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix persistent error page after paste creation",
+  "title": "Fix paste not found error after creation",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
-      "acceptanceCriteria": [
-        "Creating a new paste successfully redirects to the paste view page without error",
-        "No error page is displayed after paste creation",
-        "The paste is accessible at its generated URL"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add detailed console logging to the createPaste mutation to capture the exact error during paste creation. Log the complete error object, backend response details, network status, and distinguish between different error types (network failures, backend errors, unexpected failures). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CreatePastePage.tsx",
-          "operation": "modify",
-          "description": "Add error logging when the paste creation mutation fails. Log the error state, mutation result, and any response data to help diagnose the persistent error page issue. Ensure the error is captured before any navigation or state changes occur."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add logging to the hash-based routing logic to verify that the redirect URL is correctly formed and that navigation to the paste view page occurs as expected. Log the constructed paste URL and routing state changes."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
-      "acceptanceCriteria": [
-        "Console logs show detailed error information when paste creation fails",
-        "Error messages include backend response details and error types",
-        "Error handling distinguishes between network failures, backend errors, and unexpected failures"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Enhance the createPaste mutation's onError handler with comprehensive error logging. Log the complete error object structure, error.message, error.cause if present, and any network-related information. Add specific checks to distinguish between network failures (no response), backend errors (error message from backend), and unexpected failures. Include the paste creation parameters in error logs for debugging context. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/utils/backendError.ts",
-          "operation": "modify",
-          "description": "Enhance error normalization to preserve more backend error details for logging purposes. Add a function to extract detailed error information including error type classification, original error message, and any nested error details. This will support better error logging in useQueries.ts."
-        }
-      ]
-    },
-    {
       "id": "REQ-4",
-      "summary": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
+      "summary": "Add frontend error handling to display detailed backend error messages when a paste is not found",
       "acceptanceCriteria": [
-        "The paste ID from the backend response is correctly extracted",
-        "The redirect URL is properly formatted with the paste ID in the hash",
-        "Navigation to the paste view page occurs immediately after successful creation"
+        "PasteViewPage displays the attempted paste ID when showing 'not found' errors",
+        "Backend error messages are properly extracted and displayed to help diagnose the issue",
+        "Error state includes actionable information for debugging"
       ],
       "file_operations": [
         {
+          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "operation": "modify",
+          "description": "Enhance error handling to display the attempted paste ID in error messages. When a paste is not found, show the specific paste ID that was requested along with any backend diagnostic information. Update the ErrorState component usage to pass the paste ID as additional context for debugging. Ensure that backend error messages from the getPaste query are properly extracted and displayed to users."
+        },
+        {
+          "path": "frontend/src/components/ErrorState.tsx",
+          "operation": "modify",
+          "description": "Add support for displaying additional diagnostic context such as the attempted paste ID in error states. Enhance the not-found error display to include the paste ID that was requested. Add a section for backend diagnostic information that can be shown to help users and developers debug paste retrieval issues."
+        },
+        {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add detailed logging to the createPaste mutation's onSuccess handler to verify the paste ID is correctly extracted from the backend response. Log the raw backend response, the extracted paste ID, and the constructed redirect URL. Ensure the paste ID extraction handles both string and object response formats correctly. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/CreatePastePage.tsx",
-          "operation": "modify",
-          "description": "Add logging to verify the shareable URL is correctly constructed with the paste ID in the hash. Log the paste ID value, the constructed URL, and confirm navigation occurs. Add defensive checks to ensure the paste ID from the mutation result is valid before constructing the URL."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add logging to the hash-based routing logic to verify paste IDs are correctly extracted from the URL hash and that the PasteViewPage component receives the correct pasteId prop. Log the raw hash value, the extracted paste ID, and the routing decision."
-        },
-        {
-          "path": "frontend/src/utils/pasteIds.ts",
-          "operation": "modify",
-          "description": "Add logging to the paste ID validation and extraction functions to verify they correctly handle the paste IDs returned by the backend. Log the input paste ID, validation results, and any normalization that occurs. This will help identify if paste ID format issues are causing routing problems."
+          "description": "Ensure that the getPaste query hook properly captures and returns backend error details including any diagnostic information about why a paste was not found. Verify that error messages from the backend are preserved and accessible in the query error object for display in the UI."
         }
       ]
     }

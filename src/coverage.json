@@ -1,65 +1,49 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-20T20:15:58.202Z",
+  "generatedAt": "2026-02-22T22:37:00.143Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 4,
-    "implemented": 3,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx",
-          "frontend/src/App.tsx"
-        ]
+        "summary": "Debug and fix the backend paste storage issue where paste ID 1771799269632900371 is not being found after creation. Verify that the createPaste function properly stores the paste data in the backend canister's state and that the getPaste function can retrieve it using the same ID format.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/utils/backendError.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/utils/backendError.ts"
-        ]
+        "summary": "Add backend logging to the createPaste and getPaste functions to track paste ID generation, storage operations, and retrieval attempts. Log the paste ID format, storage confirmation, and any retrieval failures with diagnostic information.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Verify that the backend createPaste method correctly returns paste IDs and handles all edge cases including file uploads, password protection, and expiration settings",
+        "summary": "Verify that the paste ID type consistency between createPaste (which returns the ID) and getPaste (which accepts the ID as parameter) matches. Ensure both functions use the same ID representation (Nat vs Text vs custom type) throughout the storage and retrieval flow.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
         "id": "REQ-4",
-        "summary": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
+        "summary": "Add frontend error handling to display detailed backend error messages when a paste is not found, including the attempted paste ID and any backend diagnostic information returned in the error response.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/utils/pasteIds.ts"
+          "frontend/src/pages/PasteViewPage.tsx",
+          "frontend/src/components/ErrorState.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/CreatePastePage.tsx",
-          "frontend/src/App.tsx",
-          "frontend/src/utils/pasteIds.ts"
+          "frontend/src/pages/PasteViewPage.tsx",
+          "frontend/src/components/ErrorState.tsx",
+          "frontend/src/hooks/useQueries.ts"
         ]
       }
     ]
@@ -70,11 +54,9 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
+    "frontend/src/components/ErrorState.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CreatePastePage.tsx",
-    "frontend/src/utils/backendError.ts",
-    "frontend/src/utils/pasteIds.ts",
+    "frontend/src/pages/PasteViewPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
