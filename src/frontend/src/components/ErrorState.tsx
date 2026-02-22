@@ -1,68 +1,73 @@
-import { AlertCircle, Clock, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle, RefreshCw, Clock, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ErrorStateProps {
-  type: 'not-found' | 'expired' | 'error';
-  message?: string;
+  type: 'expired' | 'not-found' | 'error';
   onRetry?: () => void;
+  details?: string;
+  retryLabel?: string;
 }
 
-export default function ErrorState({ type, message, onRetry }: ErrorStateProps) {
-  const getContent = () => {
-    switch (type) {
-      case 'expired':
-        return {
-          icon: <Clock className="h-12 w-12 text-muted-foreground" />,
-          title: 'Link Expired',
-          description: message || 'Link expired — contact the sender to resend the content.',
-          showRetry: false,
-        };
-      case 'not-found':
-        return {
-          icon: <AlertCircle className="h-12 w-12 text-muted-foreground" />,
-          title: 'Not Found',
-          description: message || 'This paste does not exist or has been deleted.',
-          showRetry: false,
-        };
-      default:
-        return {
-          icon: <AlertCircle className="h-12 w-12 text-destructive" />,
-          title: 'Error',
-          description: message || 'An error occurred while loading this paste. This may be due to a network issue or initialization problem.',
-          showRetry: true,
-        };
-    }
+export default function ErrorState({ type, onRetry, details, retryLabel = 'Retry' }: ErrorStateProps) {
+  const config = {
+    expired: {
+      icon: Clock,
+      title: 'Paste Expired',
+      message: 'This paste has reached its expiration time and is no longer available.',
+      illustration: '/assets/generated/upload-illustration.dim_1200x600.png',
+    },
+    'not-found': {
+      icon: FileQuestion,
+      title: 'Paste Not Found',
+      message: 'This paste does not exist or has been removed.',
+      illustration: '/assets/generated/upload-illustration.dim_1200x600.png',
+    },
+    error: {
+      icon: AlertCircle,
+      title: 'Something Went Wrong',
+      message: 'We encountered an error while loading this paste.',
+      illustration: '/assets/generated/upload-illustration.dim_1200x600.png',
+    },
   };
 
-  const content = getContent();
+  const { icon: Icon, title, message, illustration } = config[type];
 
   return (
-    <div className="max-w-2xl mx-auto mt-12">
-      <div className="flex flex-col items-center text-center space-y-6">
+    <div className="max-w-2xl mx-auto text-center space-y-6">
+      <div className="relative w-full max-w-md mx-auto aspect-[2/1] mb-8">
         <img
-          src="/assets/generated/upload-illustration.dim_1200x600.png"
-          alt="Error illustration"
-          className="w-full max-w-md opacity-60"
+          src={illustration}
+          alt={title}
+          className="w-full h-full object-contain opacity-50"
         />
-        <div className="space-y-4">
-          {content.icon}
-          <h2 className="text-2xl font-bold text-foreground mt-4">{content.title}</h2>
-          <p className="text-muted-foreground max-w-md">{content.description}</p>
-          
-          {content.showRetry && onRetry && (
-            <div className="flex gap-3 justify-center pt-2">
-              <Button onClick={onRetry} variant="default" className="gap-2">
-                <RefreshCw className="h-4 w-4" />
-                Retry
-              </Button>
-              <Button onClick={() => window.location.reload()} variant="outline">
-                Refresh Page
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
+      
+      <div className="space-y-3">
+        <div className="flex justify-center">
+          <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Icon className="h-8 w-8 text-destructive" />
+          </div>
+        </div>
+        
+        <h2 className="text-2xl font-bold">{title}</h2>
+        <p className="text-muted-foreground max-w-md mx-auto">{message}</p>
+        
+        {details && (
+          <Alert className="text-left max-w-md mx-auto mt-4">
+            <AlertDescription className="text-sm">
+              <strong>Details:</strong> {details}
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+      {onRetry && (
+        <Button onClick={onRetry} className="gap-2 mt-6">
+          <RefreshCw className="h-4 w-4" />
+          {retryLabel}
+        </Button>
+      )}
     </div>
   );
 }

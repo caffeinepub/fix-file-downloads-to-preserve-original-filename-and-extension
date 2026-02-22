@@ -3,7 +3,19 @@
  * Examples: "9 min", "1 hr 10 min", "2 hrs 45 min", "3 days 5 hrs"
  */
 export function formatRemainingTime(nanoseconds: bigint): string {
+  // Handle negative or zero values
+  if (nanoseconds <= 0n) {
+    return 'Expired';
+  }
+
+  // Convert nanoseconds to seconds
   const totalSeconds = Number(nanoseconds) / 1_000_000_000;
+  
+  // Handle very small values
+  if (totalSeconds < 60) {
+    return 'Less than 1 min';
+  }
+
   const totalMinutes = Math.floor(totalSeconds / 60);
   const totalHours = Math.floor(totalMinutes / 60);
   const totalDays = Math.floor(totalHours / 24);

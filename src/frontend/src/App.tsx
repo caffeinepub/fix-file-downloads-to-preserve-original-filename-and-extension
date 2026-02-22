@@ -1,60 +1,71 @@
 import { useState, useEffect } from 'react';
-import { useInternetIdentity } from './hooks/useInternetIdentity';
-import CreatePastePage from './pages/CreatePastePage';
-import PasteViewPage from './pages/PasteViewPage';
-import AppLayout from './components/AppLayout';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
-import { extractPasteIdFromRoute } from './utils/pasteIds';
+import AppLayout from './components/AppLayout';
+import CreatePastePage from './pages/CreatePastePage';
+import PasteViewPage from './pages/PasteViewPage';
+import HistoryPage from './pages/HistoryPage';
+import { extractPasteIdFromRoute, isValidPasteId } from './utils/pasteIds';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
-  const [currentRoute, setCurrentRoute] = useState<{ path: string; params?: Record<string, string> }>({
-    path: '/',
-  });
+  const [currentPath, setCurrentPath] = useState(window.location.hash.slice(1) || '/');
 
   useEffect(() => {
-    const handleRouteChange = () => {
-      const hash = window.location.hash.slice(1) || '/';
-      
-      // Split hash to separate path from query string
-      const [pathPart] = hash.split('?');
-      
-      // Parse route params for /p/:id pattern
-      const pasteMatch = pathPart.match(/^\/p\/(.+)$/);
-      if (pasteMatch) {
-        // Extract and normalize the paste ID from the raw segment
-        const rawSegment = pasteMatch[1];
-        const normalizedId = extractPasteIdFromRoute(rawSegment);
-        
-        if (normalizedId) {
-          setCurrentRoute({ path: '/p/:id', params: { id: normalizedId } });
-        } else {
-          // If extraction results in empty string, default to create page
-          setCurrentRoute({ path: '/' });
-        }
-      } else {
-        setCurrentRoute({ path: pathPart });
-      }
+    const handleHashChange = () => {
+      const newPath = window.location.hash.slice(1) || '/';
+      console.log('[App] Hash changed to:', newPath);
+      setCurrentPath(newPath);
     };
 
-    handleRouteChange();
-    window.addEventListener('hashchange', handleRouteChange);
-    return () => window.removeEventListener('hashchange', handleRouteChange);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   const renderPage = () => {
-    if (currentRoute.path === '/p/:id' && currentRoute.params?.id) {
-      return <PasteViewPage pasteId={currentRoute.params.id} />;
+    console.log('[App] Rendering page for path:', currentPath);
+
+    if (currentPath === '/' || currentPath === '') {
+      console.log('[App] Rendering CreatePastePage');
+      return <CreatePastePage />;
     }
+
+    if (currentPath === '/history') {
+      console.log('[App] Rendering HistoryPage');
+      return <HistoryPage />;
+    }
+
+    // Extract and validate paste ID from the current path
+    const pasteId = extractPasteIdFromRoute(currentPath);
+    console.log('[App] Extracted paste ID from route:', pasteId);
+    
+    if (isValidPasteId(pasteId)) {
+      console.log('[App] Valid paste ID, rendering PasteViewPage');
+      return <PasteViewPage pasteId={pasteId} />;
+    }
+
+    // If no valid paste ID found, default to create page
+    console.log('[App] Invalid paste ID, defaulting to CreatePastePage');
     return <CreatePastePage />;
   };
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AppLayout currentPath={currentRoute.path}>
-        {renderPage()}
-      </AppLayout>
-      <Toaster />
+      <QueryClientProvider client={queryClient}>
+        <AppLayout currentPath={currentPath}>
+          {renderPage()}
+        </AppLayout>
+        <Toaster />
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

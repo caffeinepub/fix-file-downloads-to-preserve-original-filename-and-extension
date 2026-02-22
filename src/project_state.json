@@ -4,44 +4,46 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "On mobile devices, the file name text overflows/extends outside the layout (not responsive)."
+    "Error page persists when creating a paste after deployment of Version 14"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-mobile-responsiveness-so-long-filenames-never-overflow-outside-the-layout-in-all-places-filenames-are-displayed-selected-file-list-on-the-home-create-page-upload-progress-status-card-and-file-list-on-the-paste-view-page-use-responsive-layout-rules-e-g-allow-wrapping-stacking-on-small-screens-ensure-flex-children-have-min-width-0-and-apply-truncation-or-break-word-behavior-as-appropriate-so-the-ui-stays-within-the-viewport-on-narrow-devices",
-      "title": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
+      "id": "feature-investigate-and-fix-the-persistent-error-page-that-appears-after-attempting-to-create-a-paste-despite-version-14-deployment-addressing-the-previous-error",
+      "title": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-home-page-createpastepage-at-route-to-look-more-professional-through-ui-ux-polish-only-improve-visual-hierarchy-spacing-typography-and-section-structure-for-the-hero-intro-and-the-create-form-while-keeping-the-existing-functionality-and-wording-intent-ensure-the-page-feels-cohesive-in-both-light-and-dark-mode",
-      "title": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
+      "id": "feature-add-comprehensive-error-logging-to-the-paste-creation-flow-in-usequeries-ts-to-capture-the-exact-error-occurring-during-paste-creation-including-backend-error-details-network-failures-and-response-data",
+      "title": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-apply-a-single-coherent-visual-theme-across-the-home-create-page-and-paste-view-page-to-reinforce-a-professional-look-e-g-a-neutral-modern-editorial-style-with-subtle-borders-consistent-card-elevation-and-restrained-accent-usage-enforce-the-theme-consistently-across-key-components-without-introducing-new-product-features",
-      "title": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
+      "id": "feature-ensure-the-frontend-properly-handles-the-paste-creation-response-and-correctly-constructs-the-redirect-url-using-the-returned-paste-id",
+      "title": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
       "reqIds": [
-        "REQ-3"
+        "REQ-4"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
-      "id": "AR-1",
-      "summary": "Improve home page to look more professional (UI/UX polish)",
-      "reqIds": [],
+      "id": "AR-3",
+      "summary": "Verify that the backend createPaste method correctly returns paste IDs and handles all edge cases including file uploads, password protection, and expiration settings",
+      "reqIds": [
+        "REQ-3"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "PasteBin",
+  "projectName": "Fix persistent error page after paste creation",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

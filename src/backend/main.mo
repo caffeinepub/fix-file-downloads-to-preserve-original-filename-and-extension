@@ -4,9 +4,9 @@ import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Time "mo:core/Time";
-import Order "mo:core/Order";
 import Nat "mo:core/Nat";
-
+import List "mo:core/List";
+import Int "mo:core/Int";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
@@ -17,7 +17,6 @@ actor {
   type CompatPasteIdMap = Map.Map<CompatPasteId, Text>;
 
   var guidCounter = 0;
-
   let storageChunkSize = 2_000_000_000;
   let fileSizeLimit = 50_000_000;
   let defaultExpiration : Int = 86_400_000_000_000;
@@ -27,6 +26,7 @@ actor {
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+
   include MixinStorage();
 
   let pasteMap = Map.empty<Text, Paste>();
@@ -38,11 +38,30 @@ actor {
     (Time.now() + guidCounter).toText();
   };
 
-  public type Paste = { expirationTime : Int; items : [PasteChunk] };
+  public type Paste = {
+    expirationTime : Int;
+    items : [PasteChunk];
+    owner : ?Principal;
+    password : ?Text;
+  };
+
   public type UserProfile = { name : Text };
-  public type PasteChunk = { #text : Text; #file : FileChunk };
-  public type FileChunk = { data : Storage.ExternalBlob; filename : Text; contentType : ?Text };
-  public type PasteChunkType = { #file; #text };
+
+  public type PasteChunk = {
+    #text : Text;
+    #file : FileChunk;
+  };
+
+  public type FileChunk = {
+    data : Storage.ExternalBlob;
+    filename : Text;
+    contentType : ?Text;
+  };
+
+  public type PasteChunkType = {
+    #file;
+    #text;
+  };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -58,16 +77,20 @@ actor {
     userProfiles.get(user);
   };
 
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+  public shared ({ caller }) func saveCallerUserProfile(userProfile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
-    userProfiles.add(caller, profile);
+    userProfiles.add(caller, userProfile);
   };
 
-  public shared ({ caller }) func createPaste(chunks : [PasteChunk], expirationType : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can create pastes");
+  public shared ({ caller }) func createPaste(
+    pasteChunks : [PasteChunk],
+    expirationType : Text,
+    password : ?Text
+  ) : async Text {
+    if (pasteChunks.isEmpty()) {
+      return "";
     };
 
     let expirationTime = switch (expirationType) {
@@ -77,10 +100,26 @@ actor {
       case (_) { Time.now() + defaultExpiration };
     };
 
-    let paste = { items = chunks; expirationTime };
-    let id = generateGUID();
-    pasteMap.add(id, paste);
-    id;
+    let owner = if (AccessControl.hasPermission(accessControlState, caller, #user)) {
+      ?caller;
+    } else {
+      null;
+    };
+
+    let finalPassword = switch (owner) {
+      case (?_) { password };
+      case (null) { null };
+    };
+
+    let paste = {
+      items = pasteChunks;
+      expirationTime;
+      owner;
+      password = finalPassword;
+    };
+    let pasteId = generateGUID();
+    pasteMap.add(pasteId, paste);
+    pasteId;
   };
 
   func resolvePasteId(pasteId : Text) : Text {
@@ -96,25 +135,55 @@ actor {
     };
   };
 
-  public query ({ caller }) func getPaste(pasteId : Text) : async Paste {
-    // No authorization check - anyone with the link can view pastes (including guests)
-    switch (pasteMap.get(resolvePasteId(pasteId))) {
-      case (?paste) {
-        if (Time.now() > paste.expirationTime) {
-          Runtime.trap("Paste has expired");
+  func verifyPasteAccess(paste : Paste, caller : Principal, providedPassword : ?Text) : Bool {
+    if (Time.now() > paste.expirationTime) {
+      return false;
+    };
+
+    switch (paste.password) {
+      case (?pastePassword) {
+        switch (paste.owner) {
+          case (?owner) {
+            if (Principal.equal(owner, caller)) {
+              return true;
+            };
+          };
+          case (null) {};
         };
-        paste;
+
+        switch (providedPassword) {
+          case (?pwd) { Text.equal(pwd, pastePassword) };
+          case (null) { false };
+        };
       };
-      case (null) { Runtime.trap("Paste does not exist or has expired") };
+      case (null) { true };
     };
   };
 
-  public query ({ caller }) func getPasteChunksWithTypes(pasteId : Text) : async [(PasteChunk, PasteChunkType)] {
-    // No authorization check - anyone with the link can view pastes (including guests)
-    switch (pasteMap.get(resolvePasteId(pasteId))) {
+  public query ({ caller }) func getPaste(pasteId : Text, password : ?Text) : async ?Paste {
+    if (Text.equal(pasteId, "")) {
+      return null;
+    };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
       case (?paste) {
-        if (Time.now() > paste.expirationTime) {
-          Runtime.trap("Paste has expired");
+        if (verifyPasteAccess(paste, caller, password)) {
+          ?paste;
+        } else {
+          null;
+        };
+      };
+      case (null) { null };
+    };
+  };
+
+  public query ({ caller }) func getPasteChunksWithTypes(pasteId : Text, password : ?Text) : async [(PasteChunk, PasteChunkType)] {
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        if (not verifyPasteAccess(paste, caller, password)) {
+          Runtime.trap("Paste does not exist or has expired");
         };
         paste.items.map<PasteChunk, (PasteChunk, PasteChunkType)>(
           func(chunk) {
@@ -130,10 +199,117 @@ actor {
     };
   };
 
-  public shared ({ caller }) func saveFile(blob : Storage.ExternalBlob, filename : Text, contentType : ?Text) : async FileChunk {
+  public shared ({ caller }) func extendExpiration(
+    pasteId : Text,
+    newExpirationType : Text,
+    _password : ?Text
+  ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can upload files");
+      Runtime.trap("Unauthorized: Only logged-in users can extend expiration");
     };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        switch (paste.owner) {
+          case (?owner) {
+            if (not Principal.equal(owner, caller)) {
+              Runtime.trap("Unauthorized: You can only extend expiration of your own pastes");
+            };
+          };
+          case (null) {
+            Runtime.trap("Unauthorized: Cannot extend expiration of anonymous pastes");
+          };
+        };
+
+        if (Time.now() > paste.expirationTime) {
+          Runtime.trap("Cannot extend expiration of expired paste");
+        };
+
+        let newExpirationTime = switch (newExpirationType) {
+          case ("10min") { Time.now() + tenMinuteExpiration };
+          case ("7days") { Time.now() + oneWeekExpiration };
+          case ("30days") { Time.now() + thirtyDayExpiration };
+          case (_) { Time.now() + defaultExpiration };
+        };
+
+        let updatedPaste = {
+          items = paste.items;
+          expirationTime = newExpirationTime;
+          owner = paste.owner;
+          password = paste.password;
+        };
+        pasteMap.add(resolvedId, updatedPaste);
+      };
+      case (null) { Runtime.trap("Paste does not exist") };
+    };
+  };
+
+  public shared ({ caller }) func editPaste(pasteId : Text, newItems : [PasteChunk]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can edit pastes");
+    };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        switch (paste.owner) {
+          case (?owner) {
+            if (not Principal.equal(owner, caller)) {
+              Runtime.trap("Unauthorized: You can only edit your own pastes");
+            };
+          };
+          case (null) {
+            Runtime.trap("Unauthorized: Cannot edit anonymous pastes");
+          };
+        };
+
+        if (Time.now() > paste.expirationTime) {
+          Runtime.trap("Cannot edit expired paste");
+        };
+
+        let updatedPaste = {
+          items = newItems;
+          expirationTime = paste.expirationTime;
+          owner = paste.owner;
+          password = paste.password;
+        };
+        pasteMap.add(resolvedId, updatedPaste);
+      };
+      case (null) { Runtime.trap("Paste does not exist") };
+    };
+  };
+
+  public shared ({ caller }) func deletePaste(pasteId : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can delete pastes");
+    };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        switch (paste.owner) {
+          case (?owner) {
+            if (not Principal.equal(owner, caller)) {
+              Runtime.trap("Unauthorized: You can only delete your own pastes");
+            };
+          };
+          case (null) {
+            Runtime.trap("Unauthorized: Cannot delete anonymous pastes");
+          };
+        };
+
+        pasteMap.remove(resolvedId);
+      };
+      case (null) { Runtime.trap("Paste does not exist") };
+    };
+  };
+
+  public shared ({ caller }) func saveFile(
+    blob : Storage.ExternalBlob,
+    filename : Text,
+    contentType : ?Text
+  ) : async FileChunk {
     if (blob.size() > fileSizeLimit) {
       Runtime.trap("File size exceeds the limit of 50MB");
     };
@@ -148,8 +324,25 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can list pastes");
     };
+
     pasteMap.entries().toArray().filter(
       func((_, paste)) { Time.now() <= paste.expirationTime }
+    ).map<(Text, Paste), Text>(func((id, _)) { id });
+  };
+
+  public query ({ caller }) func listMyPastes() : async [Text] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can list their pastes");
+    };
+
+    pasteMap.entries().toArray().filter(
+      func((_, paste)) {
+        if (Time.now() > paste.expirationTime) { return false };
+        switch (paste.owner) {
+          case (?owner) { Principal.equal(owner, caller) };
+          case (null) { false };
+        };
+      }
     ).map<(Text, Paste), Text>(func((id, _)) { id });
   };
 
@@ -167,8 +360,8 @@ actor {
   };
 
   public query ({ caller }) func getRemainingTime(pasteId : Text) : async Int {
-    // No authorization check - anyone viewing a paste can see its expiration time
-    switch (pasteMap.get(resolvePasteId(pasteId))) {
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
       case (?paste) {
         if (Time.now() > paste.expirationTime) { 0 } else {
           paste.expirationTime - Time.now();
@@ -178,23 +371,27 @@ actor {
     };
   };
 
-  public query ({ caller }) func getFileMetadata(pasteId : Text) : async [(Text, ?Text)] {
-    // No authorization check - anyone viewing a paste can see file metadata
-    switch (pasteMap.get(resolvePasteId(pasteId))) {
+  public query ({ caller }) func getFileMetadata(
+    pasteId : Text,
+    password : ?Text
+  ) : async [(Text, ?Text)] {
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
       case (?paste) {
-        if (Time.now() > paste.expirationTime) {
-          Runtime.trap("Paste has expired");
+        if (not verifyPasteAccess(paste, caller, password)) {
+          Runtime.trap("Paste does not exist or has expired");
         };
+
         paste.items.filter(
-          func(chunk) {
-            switch (chunk) {
+          func(pasteChunk) {
+            switch (pasteChunk) {
               case (#file(_)) { true };
               case (#text(_)) { false };
             };
           }
         ).map<PasteChunk, (Text, ?Text)>(
-          func(chunk) {
-            switch (chunk) {
+          func(pasteChunk) {
+            switch (pasteChunk) {
               case (#file(fileChunk)) {
                 (fileChunk.filename, fileChunk.contentType);
               };
@@ -207,7 +404,67 @@ actor {
     };
   };
 
-  // Reset all default values.
+  public query ({ caller }) func isPasteOwner(pasteId : Text) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      return false;
+    };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        switch (paste.owner) {
+          case (?owner) { Principal.equal(owner, caller) };
+          case (null) { false };
+        };
+      };
+      case (null) { false };
+    };
+  };
+
+  public query ({ caller }) func getPassword(pasteId : Text) : async ?Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can access password information");
+    };
+
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        switch (paste.owner) {
+          case (?owner) {
+            if (not Principal.equal(owner, caller)) {
+              Runtime.trap("Unauthorized: You can only access password of your own pastes");
+            };
+          };
+          case (null) {
+            Runtime.trap("Unauthorized: Cannot access password of anonymous pastes");
+          };
+        };
+        paste.password;
+      };
+      case (null) { null };
+    };
+  };
+
+  public query ({ caller }) func getPasteHistory() : async ?[(Text, Paste)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only logged-in users can access paste history");
+    };
+
+    let userPastes = pasteMap.entries().toArray().filter(
+      func((_, paste)) {
+        switch (paste.owner) {
+          case (?owner) { Principal.equal(owner, caller) };
+          case (null) { false };
+        };
+      }
+    );
+
+    if (userPastes.size() == 0) {
+      return null;
+    };
+    ?userPastes;
+  };
+
   public shared ({ caller }) func systemDefaultReset() : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
@@ -224,7 +481,6 @@ actor {
     };
   };
 
-  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
   public shared ({ caller }) func clearAllPastes() : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
@@ -232,7 +488,6 @@ actor {
     pasteMap.clear();
   };
 
-  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
   public shared ({ caller }) func clearLegacyIdMap() : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
@@ -240,7 +495,6 @@ actor {
     legacyIdMap.clear();
   };
 
-  // Needed for clear function errors. If the canister runs out of memory, we must delete old data.
   public shared ({ caller }) func clearUserProfiles() : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");

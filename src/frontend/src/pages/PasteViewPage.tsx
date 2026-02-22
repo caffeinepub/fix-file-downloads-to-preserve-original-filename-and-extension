@@ -1,166 +1,227 @@
-import { useGetPaste } from '../hooks/useQueries';
+import { useGetPaste, useIsPasteOwner, useGetRemainingTime, PasteError } from '../hooks/useQueries';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Download, FileText, Loader2, Clock } from 'lucide-react';
-import ErrorState from '../components/ErrorState';
-import { ExternalBlob } from '../backend';
-import { toast } from 'sonner';
-import { computeDownloadFilename, downloadExternalBlob } from '../utils/fileDownload';
-import { useState } from 'react';
-import { isValidPasteId } from '../utils/pasteIds';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Download, FileText, Clock, Crown } from 'lucide-react';
 import { formatRemainingTime } from '../utils/formatRemainingTime';
+import { downloadExternalBlob, computeDownloadFilename } from '../utils/fileDownload';
+import { toast } from 'sonner';
+import ErrorState from '../components/ErrorState';
 
 interface PasteViewPageProps {
   pasteId: string;
 }
 
-export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
-  // Always call hooks at the top level - validate after
-  const { data: pasteData, isLoading, error, refetch } = useGetPaste(pasteId);
-  const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
+function isPasteError(error: unknown): error is PasteError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    'message' in error &&
+    typeof (error as any).type === 'string' &&
+    ['expired', 'not-found', 'error'].includes((error as any).type)
+  );
+}
 
-  const handleDownload = async (
-    blob: ExternalBlob,
-    filename: string | undefined,
-    contentType: string | undefined,
-    index: number
-  ) => {
+export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
+  const { identity } = useInternetIdentity();
+  const isAuthenticated = !!identity;
+
+  const { data: paste, isLoading, error, refetch } = useGetPaste(pasteId);
+  const { data: isOwner, isLoading: isOwnerLoading } = useIsPasteOwner(pasteId);
+  const { data: remainingTimeNs } = useGetRemainingTime(pasteId);
+
+  const showOwnerBadge = isAuthenticated && isOwner && !isOwnerLoading;
+
+  const handleDownload = async (fileChunk: any, index: number) => {
     try {
-      setDownloadingIndex(index);
+      const filename = computeDownloadFilename(
+        fileChunk.filename,
+        fileChunk.contentType,
+        index
+      );
       
-      // Compute the proper download filename with extension
-      const downloadFilename = computeDownloadFilename(filename, contentType, index);
-      
-      // Download using blob bytes and Object URL
-      await downloadExternalBlob(blob, downloadFilename, contentType);
+      await downloadExternalBlob(
+        fileChunk.data,
+        filename,
+        fileChunk.contentType || undefined
+      );
       
       toast.success('Download started');
     } catch (err) {
       console.error('Download error:', err);
       toast.error('Failed to download file');
-    } finally {
-      setDownloadingIndex(null);
     }
   };
 
-  // Validate paste ID after hooks are called
-  if (!isValidPasteId(pasteId)) {
-    return <ErrorState type="not-found" />;
-  }
-
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="max-w-4xl mx-auto space-y-6">
+        <Card className="app-card">
+          <CardHeader>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-32 mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (error) {
-    const errorMessage = error.message || '';
-    
-    // Distinguish between different error types
-    if (errorMessage.includes('expired')) {
-      return <ErrorState type="expired" />;
-    } else if (
-      errorMessage.includes('does not exist') || 
-      errorMessage.includes('has been deleted') ||
-      errorMessage.includes('Invalid paste ID')
-    ) {
-      return <ErrorState type="not-found" />;
-    } else {
-      // Network/initialization/environment errors - show actionable error with retry
+    // Check if error is a PasteError with type information
+    if (isPasteError(error)) {
+      if (error.type === 'expired') {
+        return (
+          <div className="max-w-4xl mx-auto">
+            <ErrorState
+              type="expired"
+              onRetry={() => refetch()}
+              retryLabel="Retry Loading Paste"
+            />
+          </div>
+        );
+      }
+      
+      if (error.type === 'not-found') {
+        return (
+          <div className="max-w-4xl mx-auto">
+            <ErrorState
+              type="not-found"
+            />
+          </div>
+        );
+      }
+      
+      // Generic error with PasteError structure
       return (
-        <ErrorState 
-          type="error" 
-          message={errorMessage}
-          onRetry={() => refetch()}
-        />
+        <div className="max-w-4xl mx-auto">
+          <ErrorState
+            type="error"
+            onRetry={() => refetch()}
+            details={error.message}
+            retryLabel="Retry Loading Paste"
+          />
+        </div>
       );
     }
+    
+    // Handle standard Error objects
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return (
+      <div className="max-w-4xl mx-auto">
+        <ErrorState
+          type="error"
+          onRetry={() => refetch()}
+          details={errorMessage}
+          retryLabel="Retry Loading Paste"
+        />
+      </div>
+    );
   }
 
-  if (!pasteData) {
-    return <ErrorState type="not-found" />;
+  if (!paste) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <ErrorState
+          type="not-found"
+        />
+      </div>
+    );
   }
 
-  const { chunks, remainingTime } = pasteData;
-  const textChunks = chunks.filter(c => c.type === 'text');
-  const fileChunks = chunks.filter(c => c.type === 'file');
+  const textChunks = paste.items.filter(item => item.__kind__ === 'text');
+  const fileChunks = paste.items.filter(item => item.__kind__ === 'file');
+  const remainingTime = remainingTimeNs ? formatRemainingTime(remainingTimeNs) : 'Loading...';
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <Card className="app-card">
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div>
-              <CardTitle className="text-2xl">Shared Paste</CardTitle>
-              <CardDescription>View and download shared content</CardDescription>
-            </div>
-            {remainingTime > 0n && (
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="space-y-2">
+              <CardTitle className="text-2xl">Shared Content</CardTitle>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap">Expires in {formatRemainingTime(remainingTime)}</span>
+                <Clock className="h-4 w-4" />
+                <span>Expires in {remainingTime}</span>
               </div>
+            </div>
+            {showOwnerBadge && (
+              <Badge variant="secondary" className="gap-1 self-start">
+                <Crown className="h-3 w-3" />
+                Your Paste
+              </Badge>
             )}
           </div>
         </CardHeader>
+
         <CardContent className="space-y-6">
+          {/* Text Content */}
           {textChunks.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-foreground">Message</h3>
-              <div className="p-4 bg-muted rounded-lg whitespace-pre-wrap break-words">
-                {textChunks[0].content}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-muted-foreground">Message</h3>
+              <div className="p-4 bg-muted rounded-lg">
+                <pre className="whitespace-pre-wrap break-words text-sm font-mono">
+                  {textChunks.map(chunk => chunk.text).join('\n\n')}
+                </pre>
               </div>
             </div>
           )}
 
-          {textChunks.length > 0 && fileChunks.length > 0 && <Separator />}
-
+          {/* Files Section */}
           {fileChunks.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">
+              <h3 className="text-sm font-medium text-muted-foreground">
                 Files ({fileChunks.length})
               </h3>
               <div className="space-y-2">
                 {fileChunks.map((chunk, index) => {
-                  // Display filename with fallback for older pastes
-                  const displayName = chunk.filename || `Unknown filename (file-${index + 1})`;
-                  const isDownloading = downloadingIndex === index;
-                  
+                  const fileChunk = chunk.file;
                   return (
                     <div
                       key={index}
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-muted rounded-lg"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                        <span className="text-sm truncate flex-1 min-w-0">{displayName}</span>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">
+                            {fileChunk.filename}
+                          </p>
+                          {fileChunk.contentType && (
+                            <p className="text-xs text-muted-foreground">
+                              {fileChunk.contentType}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <Button
-                        onClick={() => handleDownload(chunk.blob, chunk.filename, chunk.contentType, index)}
-                        variant="outline"
                         size="sm"
+                        variant="outline"
+                        onClick={() => handleDownload(fileChunk, index)}
                         className="gap-2 shrink-0 w-full sm:w-auto"
-                        disabled={isDownloading}
                       >
-                        {isDownloading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Downloading...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="h-4 w-4" />
-                            Download
-                          </>
-                        )}
+                        <Download className="h-4 w-4" />
+                        Download
                       </Button>
                     </div>
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Login Prompt for Anonymous Users */}
+          {!isAuthenticated && (
+            <div className="mt-6 p-4 bg-accent/5 border border-accent/20 rounded-lg">
+              <p className="text-sm text-center text-muted-foreground">
+                <strong>Want to manage your pastes?</strong> Login to extend expiration, edit, delete, or add password protection.
+              </p>
             </div>
           )}
         </CardContent>

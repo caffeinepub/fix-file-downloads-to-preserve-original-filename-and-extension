@@ -20,6 +20,8 @@ export interface FileChunk {
     filename: string;
 }
 export interface Paste {
+    owner?: Principal;
+    password?: string;
     expirationTime: bigint;
     items: Array<PasteChunk>;
 }
@@ -47,18 +49,25 @@ export interface backendInterface {
     clearAllPastes(): Promise<void>;
     clearLegacyIdMap(): Promise<void>;
     clearUserProfiles(): Promise<void>;
-    createPaste(chunks: Array<PasteChunk>, expirationType: string): Promise<string>;
+    createPaste(pasteChunks: Array<PasteChunk>, expirationType: string, password: string | null): Promise<string>;
     deleteExpiredPastes(): Promise<void>;
+    deletePaste(pasteId: string): Promise<void>;
+    editPaste(pasteId: string, newItems: Array<PasteChunk>): Promise<void>;
+    extendExpiration(pasteId: string, newExpirationType: string, _password: string | null): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getFileMetadata(pasteId: string): Promise<Array<[string, string | null]>>;
-    getPaste(pasteId: string): Promise<Paste>;
-    getPasteChunksWithTypes(pasteId: string): Promise<Array<[PasteChunk, PasteChunkType]>>;
+    getFileMetadata(pasteId: string, password: string | null): Promise<Array<[string, string | null]>>;
+    getPassword(pasteId: string): Promise<string | null>;
+    getPaste(pasteId: string, password: string | null): Promise<Paste | null>;
+    getPasteChunksWithTypes(pasteId: string, password: string | null): Promise<Array<[PasteChunk, PasteChunkType]>>;
+    getPasteHistory(): Promise<Array<[string, Paste]> | null>;
     getRemainingTime(pasteId: string): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isPasteOwner(pasteId: string): Promise<boolean>;
     listActivePastes(): Promise<Array<string>>;
-    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    listMyPastes(): Promise<Array<string>>;
+    saveCallerUserProfile(userProfile: UserProfile): Promise<void>;
     saveFile(blob: ExternalBlob, filename: string, contentType: string | null): Promise<FileChunk>;
     systemDefaultCheck(): Promise<void>;
     systemDefaultReset(): Promise<void>;

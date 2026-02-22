@@ -2,12 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-mobile-responsiveness-so-long-filenames-never-overflow-outside-the-layout-in-all-places-filenames-are-displayed-selected-file-list-on-the-home-create-page-upload-progress-status-card-and-file-list-on-the-paste-view-page-use-responsive-layout-rules-e-g-allow-wrapping-stacking-on-small-screens-ensure-flex-children-have-min-width-0-and-apply-truncation-or-break-word-behavior-as-appropriate-so-the-ui-stays-within-the-viewport-on-narrow-devices",
-      "featureTitle": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
+      "featureId": "feature-investigate-and-fix-the-persistent-error-page-that-appears-after-attempting-to-create-a-paste-despite-version-14-deployment-addressing-the-previous-error",
+      "featureTitle": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
       "files": [
-        "frontend/src/components/UploadProgressStatus.tsx",
-        "frontend/src/pages/CreatePastePage.tsx",
-        "frontend/src/pages/PasteViewPage.tsx"
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CreatePastePage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -24,11 +24,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-home-page-createpastepage-at-route-to-look-more-professional-through-ui-ux-polish-only-improve-visual-hierarchy-spacing-typography-and-section-structure-for-the-hero-intro-and-the-create-form-while-keeping-the-existing-functionality-and-wording-intent-ensure-the-page-feels-cohesive-in-both-light-and-dark-mode",
-      "featureTitle": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
+      "featureId": "feature-add-comprehensive-error-logging-to-the-paste-creation-flow-in-usequeries-ts-to-capture-the-exact-error-occurring-during-paste-creation-including-backend-error-details-network-failures-and-response-data",
+      "featureTitle": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
       "files": [
-        "frontend/src/components/AppLayout.tsx",
-        "frontend/src/pages/CreatePastePage.tsx"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/utils/backendError.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -45,12 +45,13 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-apply-a-single-coherent-visual-theme-across-the-home-create-page-and-paste-view-page-to-reinforce-a-professional-look-e-g-a-neutral-modern-editorial-style-with-subtle-borders-consistent-card-elevation-and-restrained-accent-usage-enforce-the-theme-consistently-across-key-components-without-introducing-new-product-features",
-      "featureTitle": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
+      "featureId": "feature-ensure-the-frontend-properly-handles-the-paste-creation-response-and-correctly-constructs-the-redirect-url-using-the-returned-paste-id",
+      "featureTitle": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
       "files": [
-        "frontend/src/index.css",
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/CreatePastePage.tsx",
-        "frontend/src/pages/PasteViewPage.tsx"
+        "frontend/src/utils/pasteIds.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -62,7 +63,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-4"
       ],
       "confidence": "high"
     }

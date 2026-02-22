@@ -5,120 +5,137 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, Copy, Check, ExternalLink, Loader2, FileText, X, Clock, Link2, Shield } from 'lucide-react';
+import { Upload, Copy, Check, ExternalLink, Loader2, FileText, X, Clock, Link2, Shield, LogOut, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '../config/pasteLimits';
 import { isValidPasteId } from '../utils/pasteIds';
+import { normalizeBackendError } from '../utils/backendError';
 import UploadProgressStatus from '../components/UploadProgressStatus';
 
 export default function CreatePastePage() {
-  const { identity } = useInternetIdentity();
+  const { identity, clear } = useInternetIdentity();
   const isAuthenticated = !!identity;
 
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [expirationType, setExpirationType] = useState('24hours');
   const [error, setError] = useState('');
+  const [isAuthError, setIsAuthError] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [lastSubmittedAt, setLastSubmittedAt] = useState<number>(0);
 
   const createPasteMutation = useCreatePaste();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (createPasteMutation.isPending) return; // Prevent file changes during upload
-    
     const selectedFiles = Array.from(e.target.files || []);
-    setError('');
-
-    // Validate file sizes
+    
+    // Validate each file size
     const oversizedFiles = selectedFiles.filter(file => file.size > MAX_FILE_SIZE_BYTES);
     if (oversizedFiles.length > 0) {
-      setError(
-        `The following files exceed the ${MAX_FILE_SIZE_MB}MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`
-      );
+      setError(`Some files exceed the ${MAX_FILE_SIZE_MB}MB limit: ${oversizedFiles.map(f => f.name).join(', ')}`);
       return;
     }
 
-    setFiles(prev => [...prev, ...selectedFiles]);
+    setFiles(selectedFiles);
+    setError('');
   };
 
   const removeFile = (index: number) => {
-    if (createPasteMutation.isPending) return; // Prevent file removal during upload
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsAuthError(false);
+
+    console.log('[CreatePastePage] Form submitted');
+
+    // Prevent double submission
+    const now = Date.now();
+    if (now - lastSubmittedAt < 2000) {
+      console.log('[CreatePastePage] Prevented double submission');
+      return;
+    }
+    setLastSubmittedAt(now);
 
     if (!message.trim() && files.length === 0) {
-      setError('Please add a message or upload at least one file.');
+      console.log('[CreatePastePage] Validation failed: no message or files');
+      setError('Please enter a message or select at least one file');
       return;
     }
 
-    // Set initial preparing state immediately
-    if (files.length > 0) {
-      setUploadProgress({
-        currentFile: 1,
-        totalFiles: files.length,
-        filename: files[0].name,
-        percentage: 0,
-        stage: 'preparing',
-      });
-    } else {
-      // For text-only pastes, show creating state
-      setUploadProgress({
-        currentFile: 0,
-        totalFiles: 0,
-        filename: '',
-        percentage: 100,
-        stage: 'creating',
-      });
-    }
-
-    // Allow React to render the progress UI before starting the async work
-    await new Promise(resolve => setTimeout(resolve, 0));
+    console.log('[CreatePastePage] Starting paste creation mutation');
 
     try {
+      const finalPassword = isAuthenticated && password.trim() ? password.trim() : null;
+      
+      console.log('[CreatePastePage] Calling mutateAsync with:', {
+        messageLength: message.trim().length,
+        fileCount: files.length,
+        expirationType,
+        hasPassword: !!finalPassword,
+      });
+
       const pasteId = await createPasteMutation.mutateAsync({
         message: message.trim(),
         files,
         expirationType,
-        onProgress: (progress) => {
-          setUploadProgress(progress);
-        },
+        password: finalPassword,
+        onProgress: setUploadProgress,
       });
 
-      // Validate the returned paste ID
-      if (!isValidPasteId(pasteId)) {
-        throw new Error('Invalid paste ID returned from server');
+      console.log('[CreatePastePage] Mutation completed, received paste ID:', pasteId);
+      console.log('[CreatePastePage] Paste ID type:', typeof pasteId);
+      console.log('[CreatePastePage] Paste ID length:', pasteId?.length);
+
+      if (!pasteId) {
+        console.error('[CreatePastePage] Paste ID is empty/null/undefined');
+        throw new Error('Empty paste ID received from backend');
       }
 
-      const url = `${window.location.origin}${window.location.pathname}#/p/${pasteId}`;
-      setShareUrl(url);
-      toast.success('Paste created successfully!');
+      if (!isValidPasteId(pasteId)) {
+        console.error('[CreatePastePage] Invalid paste ID format:', pasteId);
+        throw new Error('Invalid paste ID received from backend');
+      }
 
-      // Reset form
+      console.log('[CreatePastePage] Paste ID validation passed');
+
+      const url = `${window.location.origin}${window.location.pathname}#/${pasteId}`;
+      console.log('[CreatePastePage] Constructed share URL:', url);
+      
+      setShareUrl(url);
       setMessage('');
       setFiles([]);
-      setExpirationType('24hours');
+      setPassword('');
       setUploadProgress(null);
+      
+      console.log('[CreatePastePage] State updated, showing success toast');
+      toast.success('Paste created successfully!');
     } catch (err: any) {
-      setError(err.message || 'Failed to create paste. Please try again.');
-      toast.error('Failed to create paste');
+      console.error('[CreatePastePage] Error caught in handleSubmit:', err);
+      console.error('[CreatePastePage] Error type:', typeof err);
+      console.error('[CreatePastePage] Error message:', err?.message);
+      console.error('[CreatePastePage] Error stack:', err?.stack);
+      console.error('[CreatePastePage] Full error object:', err);
+      
+      const { message: errorMsg, isAuthRelated } = normalizeBackendError(err);
+      console.log('[CreatePastePage] Normalized error:', { errorMsg, isAuthRelated });
+      
+      setError(errorMsg);
+      setIsAuthError(isAuthRelated);
       setUploadProgress(null);
     }
   };
 
-  const handleCopy = async () => {
-    if (!shareUrl) {
-      toast.error('No link to copy');
-      return;
-    }
-
+  const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
@@ -129,16 +146,8 @@ export default function CreatePastePage() {
     }
   };
 
-  const handleOpenPaste = () => {
-    if (!shareUrl) {
-      toast.error('No link to open');
-      return;
-    }
-
-    const hashPart = shareUrl.split('#')[1];
-    if (hashPart) {
-      window.location.hash = hashPart;
-    }
+  const handleOpenUrl = () => {
+    window.open(shareUrl, '_blank');
   };
 
   const handleCreateAnother = () => {
@@ -146,29 +155,62 @@ export default function CreatePastePage() {
     setCopied(false);
   };
 
+  const handleLogout = async () => {
+    await clear();
+    toast.success('Logged out successfully');
+  };
+
+  const isUploading = createPasteMutation.isPending;
+
   if (shareUrl) {
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="app-card-elevated">
-          <CardHeader>
-            <CardTitle className="text-2xl">Paste Created Successfully</CardTitle>
-            <CardDescription>Share this link with anyone to give them access</CardDescription>
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Paste Created!</CardTitle>
+            <CardDescription>
+              Share this link with anyone. {isAuthenticated ? 'You can manage it from your History page.' : 'Login to manage your pastes.'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg break-all font-mono text-sm">
+            <div className="p-4 bg-muted rounded-lg break-all text-sm font-mono">
               {shareUrl}
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleCopy} className="flex-1 gap-2">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? 'Copied!' : 'Copy Link'}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={handleCopyUrl}
+                className="flex-1 gap-2"
+                variant={copied ? 'secondary' : 'default'}
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy Link
+                  </>
+                )}
               </Button>
-              <Button onClick={handleOpenPaste} variant="outline" className="gap-2">
+              <Button
+                onClick={handleOpenUrl}
+                variant="outline"
+                className="flex-1 gap-2"
+              >
                 <ExternalLink className="h-4 w-4" />
                 Open
               </Button>
             </div>
-            <Button onClick={handleCreateAnother} variant="secondary" className="w-full">
+            <Button
+              onClick={handleCreateAnother}
+              variant="ghost"
+              className="w-full"
+            >
               Create Another Paste
             </Button>
           </CardContent>
@@ -177,218 +219,146 @@ export default function CreatePastePage() {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-8">
-        <div className="text-center space-y-3">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Share Content Securely
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Create temporary, link-based shares for text and files with automatic expiration
-          </p>
-        </div>
-
-        <Card className="app-card">
-          <CardContent className="pt-8">
-            <div className="grid gap-6 mb-8">
-              <div className="flex gap-4">
-                <div className="shrink-0 mt-1">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Link2 className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-base">Share via Link</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Create a unique link to share text messages and files with anyone
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="shrink-0 mt-1">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Shield className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-base">Anyone with the Link Can View</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    No login required for viewers — just share the link and they're in
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="shrink-0 mt-1">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-base">Automatic Expiration</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Content automatically expires after your chosen time period for limited-time access
-                  </p>
-                </div>
-              </div>
-            </div>
-            <Alert className="bg-primary/5 border-primary/20">
-              <AlertDescription className="text-center py-3">
-                Please log in to create a paste. Anyone with the link will be able to view it without logging in.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const isCreating = createPasteMutation.isPending;
-
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div className="text-center space-y-3">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          Share Content Securely
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Create temporary, link-based shares for text and files with automatic expiration
-        </p>
-      </div>
-
+    <div className="max-w-2xl mx-auto">
       <Card className="app-card">
-        <CardContent className="pt-8">
-          <div className="grid gap-6 pb-8 mb-8 border-b">
-            <div className="flex gap-4">
-              <div className="shrink-0 mt-1">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Link2 className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-base">Share via Link</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Create a unique link to share text messages and files with anyone
-                </p>
-              </div>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-2xl">Create Paste</CardTitle>
+              <CardDescription>
+                Share text and files with an expiration time
+              </CardDescription>
             </div>
-            <div className="flex gap-4">
-              <div className="shrink-0 mt-1">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-base">Anyone with the Link Can View</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  No login required for viewers — just share the link and they're in
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="shrink-0 mt-1">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-primary" />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-base">Automatic Expiration</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Content automatically expires after your chosen time period for limited-time access
-                </p>
-              </div>
-            </div>
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            )}
           </div>
-
+        </CardHeader>
+        <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+            {/* Premium Features Banner */}
+            {!isAuthenticated && (
+              <Alert className="bg-accent/5 border-accent/20">
+                <Sparkles className="h-4 w-4 text-accent" />
+                <AlertDescription className="text-sm">
+                  <strong>Login to unlock:</strong> Extend expiration, edit pastes, delete anytime, password protection, and view history
+                </AlertDescription>
               </Alert>
             )}
 
-            {uploadProgress && (
-              <UploadProgressStatus
-                currentFile={uploadProgress.currentFile}
-                totalFiles={uploadProgress.totalFiles}
-                filename={uploadProgress.filename}
-                percentage={uploadProgress.percentage}
-                stage={uploadProgress.stage}
-              />
-            )}
-
+            {/* Message Input */}
             <div className="space-y-2">
-              <Label htmlFor="message" className="text-base font-semibold">Message</Label>
+              <Label htmlFor="message">Message (Optional)</Label>
               <Textarea
                 id="message"
-                placeholder="Enter your message here..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                placeholder="Enter your message here..."
                 rows={6}
                 className="resize-none"
-                disabled={isCreating}
+                disabled={isUploading}
               />
             </div>
 
-            <div className="space-y-3">
-              <Label htmlFor="files" className="text-base font-semibold">Files (optional)</Label>
-              <div className={`border-2 border-dashed border-border rounded-lg p-8 text-center transition-colors ${
-                isCreating ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary/50 cursor-pointer'
-              }`}>
-                <input
-                  type="file"
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="files">Files (Optional, {MAX_FILE_SIZE_MB}MB per file)</Label>
+              <div className="flex items-center gap-2">
+                <Input
                   id="files"
-                  multiple
+                  type="file"
                   onChange={handleFileChange}
-                  className="hidden"
-                  disabled={isCreating}
+                  disabled={isUploading}
+                  multiple
+                  className="cursor-pointer"
                 />
-                <label htmlFor="files" className={isCreating ? 'cursor-not-allowed' : 'cursor-pointer'}>
-                  <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Click to upload files (max {MAX_FILE_SIZE_MB}MB per file)
-                  </p>
-                </label>
               </div>
-
               {files.length > 0 && (
-                <div className="space-y-2 mt-4">
+                <div className="space-y-2 mt-3">
                   {files.map((file, index) => (
                     <div
                       key={index}
-                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-3 bg-muted rounded-lg"
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="text-sm truncate flex-1 min-w-0">{file.name}</span>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-2">
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                          className="shrink-0 h-8 w-8 p-0"
-                          disabled={isCreating}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        disabled={isUploading}
+                        className="shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Password Protection (Authenticated Users Only) */}
+            {isAuthenticated && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-accent" />
+                  <Label htmlFor="password">Password Protection (Optional)</Label>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password to protect this paste"
+                    disabled={isUploading}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={isUploading}
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Expiration Time */}
             <div className="space-y-2">
-              <Label htmlFor="expiration" className="text-base font-semibold">Expiration</Label>
-              <Select 
-                value={expirationType} 
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="expiration">Expiration Time</Label>
+              </div>
+              <Select
+                value={expirationType}
                 onValueChange={setExpirationType}
-                disabled={isCreating}
+                disabled={isUploading}
               >
                 <SelectTrigger id="expiration">
                   <SelectValue />
@@ -402,18 +372,51 @@ export default function CreatePastePage() {
               </Select>
             </div>
 
+            {/* Upload Progress */}
+            {uploadProgress && (
+              <UploadProgressStatus
+                currentFile={uploadProgress.currentFile}
+                totalFiles={uploadProgress.totalFiles}
+                filename={uploadProgress.filename}
+                percentage={uploadProgress.percentage}
+              />
+            )}
+
+            {/* Error Display */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription className="flex items-start gap-2">
+                  <div className="flex-1">{error}</div>
+                  {!isAuthError && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setError('')}
+                      className="shrink-0 h-auto p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 text-base"
-              disabled={isCreating}
+              className="w-full gap-2"
+              disabled={isUploading || (!message.trim() && files.length === 0)}
             >
-              {isCreating ? (
+              {isUploading ? (
                 <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Creating...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {uploadProgress ? 'Uploading...' : 'Creating...'}
                 </>
               ) : (
-                'Create Paste'
+                <>
+                  <Link2 className="h-4 w-4" />
+                  Create Paste
+                </>
               )}
             </Button>
           </form>

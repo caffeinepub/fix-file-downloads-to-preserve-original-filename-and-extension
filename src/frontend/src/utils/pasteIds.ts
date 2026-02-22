@@ -1,50 +1,81 @@
 /**
- * Utility functions for handling paste IDs (both legacy numeric and GUID-based)
+ * Utility functions for paste ID validation and extraction
  */
 
 /**
- * Checks if a paste ID looks like a legacy numeric ID (digits only)
+ * Checks if a paste ID is a legacy numeric ID
  */
-export function isLegacyNumericId(pasteId: string): boolean {
+export function isLegacyPasteId(pasteId: string): boolean {
   return /^\d+$/.test(pasteId);
 }
 
 /**
- * Validates that a paste ID is not empty or invalid
+ * Validates if a paste ID has a valid format (either legacy numeric or new GUID format)
  */
-export function isValidPasteId(pasteId: string | undefined | null): pasteId is string {
-  return typeof pasteId === 'string' && pasteId.trim().length > 0;
+export function isValidPasteId(pasteId: string | null | undefined): boolean {
+  if (!pasteId || typeof pasteId !== 'string') {
+    console.log('[isValidPasteId] Invalid input:', pasteId, 'Type:', typeof pasteId);
+    return false;
+  }
+
+  const trimmed = pasteId.trim();
+  
+  if (trimmed.length === 0) {
+    console.log('[isValidPasteId] Empty paste ID after trimming');
+    return false;
+  }
+
+  // Legacy numeric IDs
+  if (/^\d+$/.test(trimmed)) {
+    console.log('[isValidPasteId] Valid legacy numeric ID:', trimmed);
+    return true;
+  }
+
+  // New GUID format (timestamp-based, all digits)
+  if (/^\d+$/.test(trimmed) && trimmed.length > 5) {
+    console.log('[isValidPasteId] Valid GUID format:', trimmed);
+    return true;
+  }
+
+  console.log('[isValidPasteId] Invalid paste ID format:', trimmed);
+  return false;
 }
 
 /**
  * Normalizes a paste ID by trimming whitespace
  */
 export function normalizePasteId(pasteId: string): string {
-  return pasteId.trim();
+  const normalized = pasteId.trim();
+  console.log('[normalizePasteId] Input:', pasteId, 'Output:', normalized);
+  return normalized;
 }
 
 /**
- * Extracts and normalizes a paste ID from a raw hash route segment.
- * Strips trailing slashes, decodes URL encoding, removes query strings and fragments.
- * 
- * @param rawSegment - The raw route segment after /p/ (e.g., "1234/", "1234?x=y", "1234#anchor")
- * @returns Normalized paste ID safe for validation and fetching
+ * Extracts and normalizes a paste ID from a raw hash route segment
+ * Handles URL encoding and removes fragment/query string artifacts
  */
-export function extractPasteIdFromRoute(rawSegment: string): string {
-  // Remove query string and fragment
-  let cleaned = rawSegment.split('?')[0].split('#')[0];
+export function extractPasteIdFromRoute(route: string): string {
+  console.log('[extractPasteIdFromRoute] Input route:', route);
   
-  // Strip trailing slashes
-  cleaned = cleaned.replace(/\/+$/, '');
+  // Remove leading slash if present
+  let cleaned = route.startsWith('/') ? route.slice(1) : route;
+  console.log('[extractPasteIdFromRoute] After removing leading slash:', cleaned);
   
-  // Decode URL encoding
+  // Remove any query string or fragment
+  cleaned = cleaned.split('?')[0].split('#')[0];
+  console.log('[extractPasteIdFromRoute] After removing query/fragment:', cleaned);
+  
+  // URL decode
   try {
     cleaned = decodeURIComponent(cleaned);
+    console.log('[extractPasteIdFromRoute] After URL decode:', cleaned);
   } catch (e) {
-    // If decoding fails, use the original cleaned string
-    console.warn('Failed to decode paste ID:', e);
+    console.error('[extractPasteIdFromRoute] URL decode failed:', e);
   }
   
-  // Trim whitespace
-  return cleaned.trim();
+  // Normalize (trim)
+  const result = normalizePasteId(cleaned);
+  console.log('[extractPasteIdFromRoute] Final result:', result);
+  
+  return result;
 }

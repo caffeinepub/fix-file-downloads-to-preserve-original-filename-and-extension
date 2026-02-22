@@ -1,79 +1,83 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "PasteBin mobile filename overflow fixes + home/paste UI polish",
+  "title": "Fix persistent error page after paste creation",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Prevent long filenames from overflowing on mobile across selected-files list, upload progress card, and paste file list using responsive flex/min-width and truncation/wrapping rules.",
+      "summary": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
       "acceptanceCriteria": [
-        "On ~360px-wide screens, long filenames remain fully contained within the card/list row without horizontal scrolling.",
-        "CreatePastePage selected-files rows remain readable on mobile (filename truncates or wraps) and action buttons (remove) remain reachable without pushing content outside the container.",
-        "UploadProgressStatus filename line does not expand the card beyond the viewport; the filename truncates cleanly on small screens.",
-        "PasteViewPage file rows remain within the viewport on mobile; if necessary, the Download button stacks below the filename on small screens while remaining aligned inline on larger screens."
+        "Creating a new paste successfully redirects to the paste view page without error",
+        "No error page is displayed after paste creation",
+        "The paste is accessible at its generated URL"
       ],
       "file_operations": [
         {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add detailed console logging to the createPaste mutation to capture the exact error during paste creation. Log the complete error object, backend response details, network status, and distinguish between different error types (network failures, backend errors, unexpected failures). Verify the component's usage instructions before implementing."
+        },
+        {
           "path": "frontend/src/pages/CreatePastePage.tsx",
           "operation": "modify",
-          "description": "Update the selected-files row layout to be mobile-safe: ensure flex children use min-w-0, apply truncation or wrap-safe word breaking to filenames, and allow responsive stacking (e.g., row becomes column on small screens) so the remove button remains reachable without pushing content outside the container. Verify the component's usage instructions before implementing."
+          "description": "Add error logging when the paste creation mutation fails. Log the error state, mutation result, and any response data to help diagnose the persistent error page issue. Ensure the error is captured before any navigation or state changes occur."
         },
         {
-          "path": "frontend/src/components/UploadProgressStatus.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Harden the upload progress status card against filename overflow: add min-w-0 to the filename container, keep the filename line truncating within available space, and ensure the percentage label cannot force horizontal overflow on narrow screens. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/PasteViewPage.tsx",
-          "operation": "modify",
-          "description": "Make paste file rows responsive: ensure filename container uses min-w-0 with truncation/word-break, and on small screens switch to a stacked layout where the Download button can move below the filename while remaining inline-aligned on larger screens. Verify the component's usage instructions before implementing."
+          "description": "Add logging to the hash-based routing logic to verify that the redirect URL is correctly formed and that navigation to the paste view page occurs as expected. Log the constructed paste URL and routing state changes."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Polish the home/create page UI (route “/”) with improved hierarchy, spacing, and typography while preserving all existing functionality and wording intent across light/dark mode.",
+      "summary": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
       "acceptanceCriteria": [
-        "Home/create page presents a clearer hierarchy (distinct hero/intro vs form area) with consistent spacing and alignment.",
-        "No functionality changes: users can still enter a message, upload files, select expiration, and create a paste as before.",
-        "Design remains consistent and polished in both light and dark themes (no low-contrast text, no clashing surfaces)."
+        "Console logs show detailed error information when paste creation fails",
+        "Error messages include backend response details and error types",
+        "Error handling distinguishes between network failures, backend errors, and unexpected failures"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/CreatePastePage.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Refine CreatePastePage layout and visual hierarchy: clearly separate hero/intro content from the create form area (spacing, section headings, consistent alignment), improve typography scale and rhythm, and adjust surfaces/borders to look more professional while keeping all flows and wording intent intact (including unauthenticated and success states). Verify the component's usage instructions before implementing."
+          "description": "Enhance the createPaste mutation's onError handler with comprehensive error logging. Log the complete error object structure, error.message, error.cause if present, and any network-related information. Add specific checks to distinguish between network failures (no response), backend errors (error message from backend), and unexpected failures. Include the paste creation parameters in error logs for debugging context. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/AppLayout.tsx",
+          "path": "frontend/src/utils/backendError.ts",
           "operation": "modify",
-          "description": "Polish shared layout spacing and header/footer presentation to better support the updated home page hierarchy (e.g., container padding, header visual weight) while keeping navigation behavior unchanged and ensuring light/dark cohesion. Verify the component's usage instructions before implementing."
+          "description": "Enhance error normalization to preserve more backend error details for logging purposes. Add a function to extract detailed error information including error type classification, original error message, and any nested error details. This will support better error logging in useQueries.ts."
         }
       ]
     },
     {
-      "id": "REQ-3",
-      "summary": "Apply a consistent, modern visual theme across the home/create page and paste view page with uniform card/border/spacing/button styling, without changing behavior.",
+      "id": "REQ-4",
+      "summary": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
       "acceptanceCriteria": [
-        "Cards, headings, descriptions, and action buttons follow a consistent styling approach (spacing, border treatment, and emphasis states).",
-        "No new feature behavior is introduced; changes are purely presentational.",
-        "The updated styling does not reduce usability on mobile (tap targets remain usable and content remains legible)."
+        "The paste ID from the backend response is correctly extracted",
+        "The redirect URL is properly formatted with the paste ID in the hash",
+        "Navigation to the paste view page occurs immediately after successful creation"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Introduce small, reusable theme utilities (e.g., a shared card/surface class and consistent section spacing helpers) using existing Tailwind layers so CreatePastePage and PasteViewPage can share a coherent border/elevation/typography treatment in both light and dark mode. Verify the component's usage instructions before implementing."
+          "description": "Add detailed logging to the createPaste mutation's onSuccess handler to verify the paste ID is correctly extracted from the backend response. Log the raw backend response, the extracted paste ID, and the constructed redirect URL. Ensure the paste ID extraction handles both string and object response formats correctly. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/CreatePastePage.tsx",
           "operation": "modify",
-          "description": "Adopt the shared theme utilities for cards/sections/buttons on the home/create page to ensure consistent surfaces, borders, and emphasis states while keeping all behavior unchanged. Verify the component's usage instructions before implementing."
+          "description": "Add logging to verify the shareable URL is correctly constructed with the paste ID in the hash. Log the paste ID value, the constructed URL, and confirm navigation occurs. Add defensive checks to ensure the paste ID from the mutation result is valid before constructing the URL."
         },
         {
-          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Adopt the shared theme utilities for the paste view page (card, section headings, file rows, action buttons) to match the home/create page styling, ensuring mobile tap targets and readability remain strong. Verify the component's usage instructions before implementing."
+          "description": "Add logging to the hash-based routing logic to verify paste IDs are correctly extracted from the URL hash and that the PasteViewPage component receives the correct pasteId prop. Log the raw hash value, the extracted paste ID, and the routing decision."
+        },
+        {
+          "path": "frontend/src/utils/pasteIds.ts",
+          "operation": "modify",
+          "description": "Add logging to the paste ID validation and extraction functions to verify they correctly handle the paste IDs returned by the backend. Log the input paste ID, validation results, and any normalization that occurs. This will help identify if paste ID format issues are causing routing problems."
         }
       ]
     }

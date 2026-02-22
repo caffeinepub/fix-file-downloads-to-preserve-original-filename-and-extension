@@ -1,73 +1,82 @@
 {
   "kind": "build_request",
-  "title": "Fix mobile filename overflow and polish home page UI",
-  "projectName": "PasteBin",
-  "priority": "normal",
+  "title": "Fix persistent error page after paste creation",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix mobile responsiveness so long filenames never overflow outside the layout in all places filenames are displayed (selected file list on the home/create page, upload progress status card, and file list on the paste view page). Use responsive layout rules (e.g., allow wrapping/stacking on small screens, ensure flex children have min-width:0, and apply truncation or break-word behavior as appropriate) so the UI stays within the viewport on narrow devices.",
-      "target": "frontend",
+      "text": "Investigate and fix the persistent error page that appears after attempting to create a paste, despite Version 14 deployment addressing the previous error",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-4"
         ],
         "quotes": [
-          "file name is going outside on mobile devices. It's not responsive."
+          "Still having the same issue and same error page."
         ]
       },
       "acceptanceCriteria": [
-        "On ~360px-wide screens, long filenames remain fully contained within the card/list row without horizontal scrolling.",
-        "CreatePastePage selected-files rows remain readable on mobile (filename truncates or wraps) and action buttons (remove) remain reachable without pushing content outside the container.",
-        "UploadProgressStatus filename line does not expand the card beyond the viewport; the filename truncates cleanly on small screens.",
-        "PasteViewPage file rows remain within the viewport on mobile; if necessary, the Download button stacks below the filename on small screens while remaining aligned inline on larger screens."
+        "Creating a new paste successfully redirects to the paste view page without error",
+        "No error page is displayed after paste creation",
+        "The paste is accessible at its generated URL"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Update the home page (CreatePastePage at route “/”) to look more professional through UI/UX polish only: improve visual hierarchy, spacing, typography, and section structure for the hero/intro and the create form while keeping the existing functionality and wording intent. Ensure the page feels cohesive in both light and dark mode.",
+      "text": "Add comprehensive error logging to the paste creation flow in useQueries.ts to capture the exact error occurring during paste creation, including backend error details, network failures, and response data",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "Also work on home page to give it more professional look"
+          "msg-4"
         ]
       },
       "acceptanceCriteria": [
-        "Home/create page presents a clearer hierarchy (distinct hero/intro vs form area) with consistent spacing and alignment.",
-        "No functionality changes: users can still enter a message, upload files, select expiration, and create a paste as before.",
-        "Design remains consistent and polished in both light and dark themes (no low-contrast text, no clashing surfaces)."
+        "Console logs show detailed error information when paste creation fails",
+        "Error messages include backend response details and error types",
+        "Error handling distinguishes between network failures, backend errors, and unexpected failures"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Apply a single coherent visual theme across the home/create page and paste view page to reinforce a professional look (e.g., a neutral, modern editorial style with subtle borders, consistent card elevation, and restrained accent usage). Enforce the theme consistently across key components without introducing new product features.",
-      "target": "frontend",
+      "text": "Verify that the backend createPaste method correctly returns paste IDs and handles all edge cases including file uploads, password protection, and expiration settings",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "work on home page to give it more professional look"
+          "msg-4"
         ]
       },
       "acceptanceCriteria": [
-        "Cards, headings, descriptions, and action buttons follow a consistent styling approach (spacing, border treatment, and emphasis states).",
-        "No new feature behavior is introduced; changes are purely presentational.",
-        "The updated styling does not reduce usability on mobile (tap targets remain usable and content remains legible)."
+        "createPaste returns a valid paste ID for all valid input combinations",
+        "File uploads are correctly stored and associated with the paste",
+        "Password protection and expiration settings are properly applied",
+        "Backend logs show successful paste creation without errors"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Ensure the frontend properly handles the paste creation response and correctly constructs the redirect URL using the returned paste ID",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The paste ID from the backend response is correctly extracted",
+        "The redirect URL is properly formatted with the paste ID in the hash",
+        "Navigation to the paste view page occurs immediately after successful creation"
       ]
     }
   ],
   "constraints": [
-    "Frontend immutable paths must not be modified: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Keep the backend (Motoko) logic and data model unchanged for this request."
+    "Do not modify the Internet Identity authentication flow",
+    "Preserve existing paste data and user profiles",
+    "Maintain backward compatibility with legacy paste IDs"
   ],
   "nonGoals": [
-    "Adding new backend endpoints or changing paste/file storage behavior.",
-    "Adding new authentication providers (Internet Identity remains the only auth).",
-    "Implementing real-time features (e.g., upload streaming via WebSockets) beyond current behavior."
+    "Changing the overall paste creation UI/UX",
+    "Modifying unrelated features like history page or paste viewing",
+    "Adding new paste features or capabilities"
   ],
   "imageRequirements": {
     "required": [],

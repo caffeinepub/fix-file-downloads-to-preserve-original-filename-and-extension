@@ -17,6 +17,8 @@ export interface FileChunk {
   'filename' : string,
 }
 export interface Paste {
+  'owner' : [] | [Principal],
+  'password' : [] | [string],
   'expirationTime' : bigint,
   'items' : Array<PasteChunk>,
 }
@@ -60,20 +62,33 @@ export interface _SERVICE {
   'clearAllPastes' : ActorMethod<[], undefined>,
   'clearLegacyIdMap' : ActorMethod<[], undefined>,
   'clearUserProfiles' : ActorMethod<[], undefined>,
-  'createPaste' : ActorMethod<[Array<PasteChunk>, string], string>,
+  'createPaste' : ActorMethod<
+    [Array<PasteChunk>, string, [] | [string]],
+    string
+  >,
   'deleteExpiredPastes' : ActorMethod<[], undefined>,
+  'deletePaste' : ActorMethod<[string], undefined>,
+  'editPaste' : ActorMethod<[string, Array<PasteChunk>], undefined>,
+  'extendExpiration' : ActorMethod<[string, string, [] | [string]], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getFileMetadata' : ActorMethod<[string], Array<[string, [] | [string]]>>,
-  'getPaste' : ActorMethod<[string], Paste>,
+  'getFileMetadata' : ActorMethod<
+    [string, [] | [string]],
+    Array<[string, [] | [string]]>
+  >,
+  'getPassword' : ActorMethod<[string], [] | [string]>,
+  'getPaste' : ActorMethod<[string, [] | [string]], [] | [Paste]>,
   'getPasteChunksWithTypes' : ActorMethod<
-    [string],
+    [string, [] | [string]],
     Array<[PasteChunk, PasteChunkType]>
   >,
+  'getPasteHistory' : ActorMethod<[], [] | [Array<[string, Paste]>]>,
   'getRemainingTime' : ActorMethod<[string], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isPasteOwner' : ActorMethod<[string], boolean>,
   'listActivePastes' : ActorMethod<[], Array<string>>,
+  'listMyPastes' : ActorMethod<[], Array<string>>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'saveFile' : ActorMethod<[ExternalBlob, string, [] | [string]], FileChunk>,
   'systemDefaultCheck' : ActorMethod<[], undefined>,

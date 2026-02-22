@@ -36,6 +36,8 @@ export const PasteChunk = IDL.Variant({
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
 export const Paste = IDL.Record({
+  'owner' : IDL.Opt(IDL.Principal),
+  'password' : IDL.Opt(IDL.Text),
   'expirationTime' : IDL.Int,
   'items' : IDL.Vec(PasteChunk),
 });
@@ -76,19 +78,40 @@ export const idlService = IDL.Service({
   'clearAllPastes' : IDL.Func([], [], []),
   'clearLegacyIdMap' : IDL.Func([], [], []),
   'clearUserProfiles' : IDL.Func([], [], []),
-  'createPaste' : IDL.Func([IDL.Vec(PasteChunk), IDL.Text], [IDL.Text], []),
+  'createPaste' : IDL.Func(
+      [IDL.Vec(PasteChunk), IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Text],
+      [],
+    ),
   'deleteExpiredPastes' : IDL.Func([], [], []),
+  'deletePaste' : IDL.Func([IDL.Text], [], []),
+  'editPaste' : IDL.Func([IDL.Text, IDL.Vec(PasteChunk)], [], []),
+  'extendExpiration' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+      [],
+      [],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getFileMetadata' : IDL.Func(
-      [IDL.Text],
+      [IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Opt(IDL.Text)))],
       ['query'],
     ),
-  'getPaste' : IDL.Func([IDL.Text], [Paste], ['query']),
+  'getPassword' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+  'getPaste' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Opt(Paste)],
+      ['query'],
+    ),
   'getPasteChunksWithTypes' : IDL.Func(
-      [IDL.Text],
+      [IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Vec(IDL.Tuple(PasteChunk, PasteChunkType))],
+      ['query'],
+    ),
+  'getPasteHistory' : IDL.Func(
+      [],
+      [IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, Paste)))],
       ['query'],
     ),
   'getRemainingTime' : IDL.Func([IDL.Text], [IDL.Int], ['query']),
@@ -98,7 +121,9 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isPasteOwner' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   'listActivePastes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+  'listMyPastes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'saveFile' : IDL.Func(
       [ExternalBlob, IDL.Text, IDL.Opt(IDL.Text)],
@@ -137,6 +162,8 @@ export const idlFactory = ({ IDL }) => {
   const PasteChunk = IDL.Variant({ 'file' : FileChunk, 'text' : IDL.Text });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
   const Paste = IDL.Record({
+    'owner' : IDL.Opt(IDL.Principal),
+    'password' : IDL.Opt(IDL.Text),
     'expirationTime' : IDL.Int,
     'items' : IDL.Vec(PasteChunk),
   });
@@ -174,19 +201,40 @@ export const idlFactory = ({ IDL }) => {
     'clearAllPastes' : IDL.Func([], [], []),
     'clearLegacyIdMap' : IDL.Func([], [], []),
     'clearUserProfiles' : IDL.Func([], [], []),
-    'createPaste' : IDL.Func([IDL.Vec(PasteChunk), IDL.Text], [IDL.Text], []),
+    'createPaste' : IDL.Func(
+        [IDL.Vec(PasteChunk), IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Text],
+        [],
+      ),
     'deleteExpiredPastes' : IDL.Func([], [], []),
+    'deletePaste' : IDL.Func([IDL.Text], [], []),
+    'editPaste' : IDL.Func([IDL.Text, IDL.Vec(PasteChunk)], [], []),
+    'extendExpiration' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text)],
+        [],
+        [],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getFileMetadata' : IDL.Func(
-        [IDL.Text],
+        [IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Opt(IDL.Text)))],
         ['query'],
       ),
-    'getPaste' : IDL.Func([IDL.Text], [Paste], ['query']),
+    'getPassword' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
+    'getPaste' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text)],
+        [IDL.Opt(Paste)],
+        ['query'],
+      ),
     'getPasteChunksWithTypes' : IDL.Func(
-        [IDL.Text],
+        [IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Vec(IDL.Tuple(PasteChunk, PasteChunkType))],
+        ['query'],
+      ),
+    'getPasteHistory' : IDL.Func(
+        [],
+        [IDL.Opt(IDL.Vec(IDL.Tuple(IDL.Text, Paste)))],
         ['query'],
       ),
     'getRemainingTime' : IDL.Func([IDL.Text], [IDL.Int], ['query']),
@@ -196,7 +244,9 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isPasteOwner' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
     'listActivePastes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
+    'listMyPastes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'saveFile' : IDL.Func(
         [ExternalBlob, IDL.Text, IDL.Opt(IDL.Text)],
