@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the paste not found error that occurs after creating a paste, ensuring pastes can be retrieved immediately after creation.
+**Goal:** Fix paste retrieval so newly created pastes can be viewed immediately, and remove draft editor console errors.
 
 **Planned changes:**
-- Debug and fix backend paste storage to ensure pastes are properly stored and retrievable using their creation ID
-- Add backend logging to track paste ID generation, storage operations, and retrieval attempts
-- Verify paste ID type consistency between createPaste and getPaste functions
-- Improve frontend error handling to display detailed backend error messages including attempted paste ID
+- Remove or suppress the draft-editor origin error that appears in the console during paste operations
+- Fix backend paste retrieval logic to return correct paste data for valid IDs instead of null
+- Verify paste ID format consistency between creation and retrieval operations
 
-**User-visible outcome:** Users can successfully create and view pastes without encountering "paste not found" errors when navigating to newly created paste URLs.
+**User-visible outcome:** Users can view their pastes immediately after creating them without encountering "Paste Not Found" errors, and the console will be free of draft-editor origin errors.

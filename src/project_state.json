@@ -1,32 +1,22 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Pastebin application with paste creation and viewing functionality",
+  "summary": "Pastebin application with text sharing functionality. Paste data resets between deployments are acceptable.",
   "architectural_notes": [
-    "Frontend correctly extracts and validates paste IDs using legacy numeric format",
-    "Application uses hash-based routing (/#/pasteId)",
-    "Backend canister stores pastes with numeric IDs"
+    "Draft editor causing origin errors needs configuration or removal",
+    "Paste retrieval returning null despite valid remaining time - backend storage issue",
+    "Pastes can reset between deployments - no persistent storage required"
   ],
   "known_issues": [
-    "Paste not found error after creation - ID 1771799269632900371 validated on frontend but not retrievable from backend",
-    "Draft editor shows 'disallowed origin' error for https://molecular-lavender-hsv-draft.caffeine.xyz",
-    "Possible mismatch between paste creation storage and retrieval logic in backend canister"
+    "Draft editor script shows disallowed origin error for deployed domain",
+    "Backend returns null for newly created pastes even with valid paste ID"
   ],
   "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-add-frontend-error-handling-to-display-detailed-backend-error-messages-when-a-paste-is-not-found-including-the-attempted-paste-id-and-any-backend-diagnostic-information-returned-in-the-error-response",
-      "title": "Add frontend error handling to display detailed backend error messages when a paste is not found, including the attempted paste ID and any backend diagnostic information returned in the error response.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    }
-  ],
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Debug and fix the backend paste storage issue where paste ID 1771799269632900371 is not being found after creation. Verify that the createPaste function properly stores the paste data in the backend canister's state and that the getPaste function can retrieve it using the same ID format.",
+      "summary": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
       "reqIds": [
         "REQ-1"
       ],
@@ -34,7 +24,7 @@
     },
     {
       "id": "AR-2",
-      "summary": "Add backend logging to the createPaste and getPaste functions to track paste ID generation, storage operations, and retrieval attempts. Log the paste ID format, storage confirmation, and any retrieval failures with diagnostic information.",
+      "summary": "Fix the backend paste retrieval logic so that newly created pastes with valid IDs (e.g., 1771800332721583303) return the correct paste data instead of null",
       "reqIds": [
         "REQ-2"
       ],
@@ -42,14 +32,14 @@
     },
     {
       "id": "AR-3",
-      "summary": "Verify that the paste ID type consistency between createPaste (which returns the ID) and getPaste (which accepts the ID as parameter) matches. Ensure both functions use the same ID representation (Nat vs Text vs custom type) throughout the storage and retrieval flow.",
+      "summary": "Verify that the paste ID format used during creation matches the format expected during retrieval, ensuring consistency between storage and lookup operations",
       "reqIds": [
         "REQ-3"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Fix paste not found error after creation",
+  "projectName": "Paste Share",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

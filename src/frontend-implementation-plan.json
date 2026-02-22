@@ -1,31 +1,25 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix paste not found error after creation",
+  "title": "Fix paste retrieval and remove draft editor origin errors",
   "requirements": [
     {
-      "id": "REQ-4",
-      "summary": "Add frontend error handling to display detailed backend error messages when a paste is not found",
+      "id": "REQ-1",
+      "summary": "Remove or suppress the draft editor origin error that appears in the console during paste operations",
       "acceptanceCriteria": [
-        "PasteViewPage displays the attempted paste ID when showing 'not found' errors",
-        "Backend error messages are properly extracted and displayed to help diagnose the issue",
-        "Error state includes actionable information for debugging"
+        "Console no longer shows draft-editor origin errors",
+        "Paste creation and viewing functionality remains unaffected"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/PasteViewPage.tsx",
+          "path": "frontend/src/utils/draftEditorDiagnostics.ts",
           "operation": "modify",
-          "description": "Enhance error handling to display the attempted paste ID in error messages. When a paste is not found, show the specific paste ID that was requested along with any backend diagnostic information. Update the ErrorState component usage to pass the paste ID as additional context for debugging. Ensure that backend error messages from the getPaste query are properly extracted and displayed to users."
+          "description": "Update the console.error filtering logic to properly suppress the draft-editor origin error from https://molecular-lavender-hsv-draft.caffeine.xyz. Ensure the filter catches both the exact error message format and any variants, while maintaining documentation that these are non-blocking platform preview warnings."
         },
         {
-          "path": "frontend/src/components/ErrorState.tsx",
+          "path": "frontend/src/main.tsx",
           "operation": "modify",
-          "description": "Add support for displaying additional diagnostic context such as the attempted paste ID in error states. Enhance the not-found error display to include the paste ID that was requested. Add a section for backend diagnostic information that can be shown to help users and developers debug paste retrieval issues."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure that the getPaste query hook properly captures and returns backend error details including any diagnostic information about why a paste was not found. Verify that error messages from the backend are preserved and accessible in the query error object for display in the UI."
+          "description": "Verify that draftEditorDiagnostics is properly initialized early in the application lifecycle before any paste operations occur. Ensure the error suppression is active before the App component renders."
         }
       ]
     }

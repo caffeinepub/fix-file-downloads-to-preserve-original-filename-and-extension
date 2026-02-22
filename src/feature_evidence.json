@@ -1,27 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-add-frontend-error-handling-to-display-detailed-backend-error-messages-when-a-paste-is-not-found-including-the-attempted-paste-id-and-any-backend-diagnostic-information-returned-in-the-error-response",
-      "featureTitle": "Add frontend error handling to display detailed backend error messages when a paste is not found, including the attempted paste ID and any backend diagnostic information returned in the error response.",
-      "files": [
-        "frontend/src/components/ErrorState.tsx",
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/PasteViewPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }
