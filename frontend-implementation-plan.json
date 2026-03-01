@@ -1,25 +1,37 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix paste retrieval and remove draft editor origin errors",
+  "title": "Fix unauthorized upload error in production",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove or suppress the draft editor origin error that appears in the console during paste operations",
+      "summary": "Fix the 'Unauthorized: Only logged-in users can upload files' error in production by ensuring the frontend properly initializes the authenticated actor before file upload operations and verifying backend authorization logic allows the intended access pattern",
       "acceptanceCriteria": [
-        "Console no longer shows draft-editor origin errors",
-        "Paste creation and viewing functionality remains unaffected"
+        "A logged-in user can successfully upload files without receiving an Unauthorized error",
+        "If anonymous uploads are intended to be allowed, the backend access check is updated to permit them",
+        "If uploads require authentication, the frontend correctly passes the authenticated actor and prompts login before attempting upload",
+        "The upload flow works end-to-end in production without authorization errors"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/draftEditorDiagnostics.ts",
+          "path": "frontend/src/hooks/useActor.ts",
           "operation": "modify",
-          "description": "Update the console.error filtering logic to properly suppress the draft-editor origin error from https://molecular-lavender-hsv-draft.caffeine.xyz. Ensure the filter catches both the exact error message format and any variants, while maintaining documentation that these are non-blocking platform preview warnings."
+          "description": "Review and ensure the actor initialization logic correctly handles authenticated identity before any backend calls. Verify that the authenticated actor is fully initialized and the identity principal is properly set before the actor becomes available to dependent hooks. Add additional validation or initialization checks if needed to prevent race conditions where upload operations attempt to use an actor that hasn't fully established its authenticated context."
         },
         {
-          "path": "frontend/src/main.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Verify that draftEditorDiagnostics is properly initialized early in the application lifecycle before any paste operations occur. Ensure the error suppression is active before the App component renders."
+          "description": "Review the createPaste mutation and any file upload operations to ensure they wait for the authenticated actor to be fully available before executing backend calls. Add guards to prevent upload attempts when the actor is not ready or when the user is not authenticated. Verify the component is using the authorization component's pattern by checking authentication state before allowing file uploads."
+        },
+        {
+          "path": "frontend/src/pages/CreatePastePage.tsx",
+          "operation": "modify",
+          "description": "Add explicit authentication checks before allowing file upload operations. Display a login prompt or disable the upload button when the user is not authenticated. Ensure that the file upload flow only proceeds after verifying the user has a valid authenticated identity and the actor is fully initialized. Use the authorization component to guard upload functionality and verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/PasteEditModal.tsx",
+          "operation": "modify",
+          "description": "Add authentication validation before allowing file uploads in the edit flow. Ensure the authenticated actor is available and the user identity is properly established before attempting to upload new files during paste edits. Add user feedback if authentication state is not ready."
         }
       ]
     }

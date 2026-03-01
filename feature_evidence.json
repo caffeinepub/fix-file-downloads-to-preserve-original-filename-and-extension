@@ -1,4 +1,27 @@
 {
   "kind": "feature_evidence_report",
-  "features": []
+  "features": [
+    {
+      "featureId": "feature-fix-the-unauthorized-only-logged-in-users-can-upload-files-error-that-occurs-when-uploading-files-in-production-the-backend-authentication-guard-for-file-upload-operations-must-correctly-support-both-anonymous-and-authenticated-uploads-or-the-frontend-must-ensure-the-actor-is-properly-initialized-with-the-authenticated-identity-before-attempting-uploads-investigate-whether-the-backend-is-rejecting-calls-due-to-a-misconfigured-principal-check-and-whether-the-frontend-is-passing-the-correct-authenticated-actor-during-the-upload-flow",
+      "featureTitle": "Fix the 'Unauthorized: Only logged-in users can upload files' error that occurs when uploading files in production. The backend authentication guard for file upload operations must correctly support both anonymous and authenticated uploads, or the frontend must ensure the actor is properly initialized with the authenticated identity before attempting uploads. Investigate whether the backend is rejecting calls due to a misconfigured principal check, and whether the frontend is passing the correct authenticated actor during the upload flow.",
+      "files": [
+        "frontend/src/components/PasteEditModal.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/CreatePastePage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    }
+  ]
 }

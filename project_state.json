@@ -1,45 +1,24 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Pastebin application with text sharing functionality. Paste data resets between deployments are acceptable.",
-  "architectural_notes": [
-    "Draft editor causing origin errors needs configuration or removal",
-    "Paste retrieval returning null despite valid remaining time - backend storage issue",
-    "Pastes can reset between deployments - no persistent storage required"
-  ],
+  "summary": "A web application (pastebin/file upload style) where users can create and share content. Currently debugging authentication issues in production — users are getting 'Unauthorized: Only logged-in users can upload files' error when attempting to upload files.",
+  "architectural_notes": [],
   "known_issues": [
-    "Draft editor script shows disallowed origin error for deployed domain",
-    "Backend returns null for newly created pastes even with valid paste ID"
+    "Production upload returns 'Unauthorized: Only logged-in users can upload files' error — authentication check may be incorrectly blocking uploads or login flow is not properly integrated"
   ],
   "isFixRequest": true,
-  "existing_features": [],
-  "new_feature_requests": [
+  "existing_features": [
     {
-      "id": "AR-1",
-      "summary": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
+      "id": "feature-fix-the-unauthorized-only-logged-in-users-can-upload-files-error-that-occurs-when-uploading-files-in-production-the-backend-authentication-guard-for-file-upload-operations-must-correctly-support-both-anonymous-and-authenticated-uploads-or-the-frontend-must-ensure-the-actor-is-properly-initialized-with-the-authenticated-identity-before-attempting-uploads-investigate-whether-the-backend-is-rejecting-calls-due-to-a-misconfigured-principal-check-and-whether-the-frontend-is-passing-the-correct-authenticated-actor-during-the-upload-flow",
+      "title": "Fix the 'Unauthorized: Only logged-in users can upload files' error that occurs when uploading files in production. The backend authentication guard for file upload operations must correctly support both anonymous and authenticated uploads, or the frontend must ensure the actor is properly initialized with the authenticated identity before attempting uploads. Investigate whether the backend is rejecting calls due to a misconfigured principal check, and whether the frontend is passing the correct authenticated actor during the upload flow.",
       "reqIds": [
         "REQ-1"
       ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Fix the backend paste retrieval logic so that newly created pastes with valid IDs (e.g., 1771800332721583303) return the correct paste data instead of null",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Verify that the paste ID format used during creation matches the format expected during retrieval, ensuring consistency between storage and lookup operations",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
+      "version": 1
     }
   ],
-  "projectName": "Paste Share",
+  "new_feature_requests": [],
+  "projectName": "PasteBin Share",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,44 +1,34 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-22T22:50:53.650Z",
-  "summary": "The diff addresses backend paste retrieval logic (REQ-2, REQ-3) by adding migration support and ID resolution functionality. However, there is no evidence of frontend changes to address the draft editor origin error (REQ-1).",
+  "generatedAt": "2026-03-01T19:10:55.348Z",
+  "summary": "The diff addresses REQ-1 by making frontend-side fixes: guarding against submitting before the authenticated actor is ready (checking isFetching and actor availability), adding actor initialization checks in useCreatePaste, CreatePastePage, and PasteEditModal. The backend main.mo also shows changes, though the file is truncated. The frontend correctly passes the authenticated actor and prevents uploads with a stale anonymous actor. No evidence of backend saveFile authorization logic being changed is visible in the truncated diff.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
-      "reason": "No frontend files were modified in the diff. The requirement explicitly targets [frontend] console errors from the draft editor, but only backend files (backend/main.mo, backend/migration.mo) and project_state.json were changed.",
-      "evidence": []
+      "requirement": "Investigate and fix whether the backend is rejecting calls due to a misconfigured principal check in the file upload authorization guard (saveFile function)",
+      "reason": "The backend main.mo diff is truncated and does not show the saveFile or file upload authorization guard. There is no visible evidence that the backend authorization check for file uploads (the one producing 'Unauthorized: Only logged-in users can upload files') was modified or removed. Only frontend guards were clearly implemented.",
+      "evidence": [
+        "backend/main.mo"
+      ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Added migration module (backend/migration.mo) with migration infrastructure",
-      "reason": "The BuildRequest explicitly states in non-goals: 'Migrating existing paste data formats' and 'Implementing stable storage across deployments'. The migration module suggests data migration support which contradicts the stated non-goals and the constraint that 'Paste data resetting between deployments is acceptable'.",
+      "description": "Paste verification step after creation: after calling createPaste, the frontend calls getPaste to verify the paste was stored correctly",
+      "reason": "The build request only asks to fix the unauthorized upload error. Adding a post-creation verification call (getPaste after createPaste) was not requested.",
       "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "User profile management functionality (getCallerUserProfile, getUserProfile, saveCallerUserProfile)",
-      "reason": "The BuildRequest focuses solely on fixing paste retrieval and removing draft editor errors. User profile management is not mentioned in any requirement or acceptance criteria.",
-      "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Authorization and access control enhancements (MixinAuthorization, AccessControl integration, verifyPasteAccess)",
-      "reason": "The constraint explicitly states 'Do not modify the Internet Identity integration or authentication flow'. While the diff shows integration of authorization mixins and access control logic, these changes were not requested in any requirement.",
-      "evidence": [
-        "backend/main.mo"
+        "frontend/src/hooks/useQueries.ts"
       ]
     }
   ],
-  "confidence": 0.85,
+  "confidence": 0.62,
   "changed_files": [
     "backend/main.mo",
-    "backend/migration.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/components/PasteEditModal.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/CreatePastePage.tsx",
     "project_state.json"
   ]
 }

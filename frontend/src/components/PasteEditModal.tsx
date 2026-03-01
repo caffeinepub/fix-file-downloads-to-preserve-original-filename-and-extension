@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Save, FileText, X, Upload, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Save, FileText, X, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { MAX_FILE_SIZE_BYTES, MAX_FILE_SIZE_MB } from '../config/pasteLimits';
-import type { PasteChunk, FileChunk } from '../backend';
+import type { PasteChunk } from '../backend';
 import { ExternalBlob } from '../backend';
 import { useActor } from '../hooks/useActor';
 
@@ -20,7 +20,7 @@ interface PasteEditModalProps {
 }
 
 export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEditModalProps) {
-  const { actor } = useActor();
+  const { actor, isFetching: actorFetching } = useActor();
   const { data: paste, isLoading: pasteLoading } = useGetPaste(pasteId);
   const { data: currentPassword } = useGetPassword(pasteId);
   const editPasteMutation = useEditPaste();
@@ -64,7 +64,18 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
   };
 
   const handleSave = async () => {
-    if (!paste || !actor) return;
+    if (!paste) return;
+
+    // Guard: actor must be fully initialized and authenticated before attempting upload
+    if (actorFetching) {
+      toast.error('Connection is still initializing. Please wait a moment and try again.');
+      return;
+    }
+
+    if (!actor) {
+      toast.error('Actor not available. Please refresh and try again.');
+      return;
+    }
 
     try {
       // Keep existing file chunks
@@ -135,6 +146,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
   };
 
   const isSaving = editPasteMutation.isPending || extendExpirationMutation.isPending;
+  const isDisabled = isSaving || actorFetching;
 
   if (pasteLoading) {
     return (
@@ -168,6 +180,14 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Actor initializing notice */}
+          {actorFetching && (
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>Establishing secure connection…</span>
+            </div>
+          )}
+
           {/* Text Content */}
           <div className="space-y-2">
             <Label htmlFor="edit-text">Message</Label>
@@ -178,7 +198,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
               rows={6}
               className="resize-none"
               placeholder="Enter your message..."
-              disabled={isSaving}
+              disabled={isDisabled}
             />
           </div>
 
@@ -212,7 +232,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
               id="new-files"
               type="file"
               onChange={handleFileChange}
-              disabled={isSaving}
+              disabled={isDisabled}
               multiple
               className="cursor-pointer"
             />
@@ -237,7 +257,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
                       variant="ghost"
                       size="sm"
                       onClick={() => removeNewFile(index)}
-                      disabled={isSaving}
+                      disabled={isDisabled}
                       className="shrink-0"
                     >
                       <X className="h-4 w-4" />
@@ -258,7 +278,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password to protect this paste"
-                disabled={isSaving}
+                disabled={isDisabled}
                 className="pr-10"
               />
               <Button
@@ -267,7 +287,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
                 size="sm"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-0 top-0 h-full px-3"
-                disabled={isSaving}
+                disabled={isDisabled}
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -284,7 +304,7 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
             <Select
               value={expirationType}
               onValueChange={setExpirationType}
-              disabled={isSaving}
+              disabled={isDisabled}
             >
               <SelectTrigger id="edit-expiration">
                 <SelectValue />
@@ -318,13 +338,18 @@ export default function PasteEditModal({ pasteId, onClose, onSuccess }: PasteEdi
           </Button>
           <Button
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isDisabled}
             className="gap-2"
           >
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Saving...
+              </>
+            ) : actorFetching ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Connecting...
               </>
             ) : (
               <>

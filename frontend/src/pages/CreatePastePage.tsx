@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useCreatePaste, type UploadProgress } from '../hooks/useQueries';
+import { useActor } from '../hooks/useActor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ import UploadProgressStatus from '../components/UploadProgressStatus';
 
 export default function CreatePastePage() {
   const { identity, clear } = useInternetIdentity();
+  const { isFetching: actorFetching } = useActor();
   const isAuthenticated = !!identity;
 
   const [message, setMessage] = useState('');
@@ -69,6 +71,13 @@ export default function CreatePastePage() {
     if (!message.trim() && files.length === 0) {
       console.log('[CreatePastePage] Validation failed: no message or files');
       setError('Please enter a message or select at least one file');
+      return;
+    }
+
+    // Guard: actor must be fully initialized before attempting upload
+    if (actorFetching) {
+      console.log('[CreatePastePage] Actor is still initializing, aborting submit');
+      setError('Connection is still initializing. Please wait a moment and try again.');
       return;
     }
 
@@ -161,6 +170,8 @@ export default function CreatePastePage() {
   };
 
   const isUploading = createPasteMutation.isPending;
+  // Disable submit while actor is initializing (e.g. after login) to prevent using wrong actor
+  const isActorReady = !actorFetching;
 
   if (shareUrl) {
     return (
@@ -251,6 +262,16 @@ export default function CreatePastePage() {
                 <Sparkles className="h-4 w-4 text-accent" />
                 <AlertDescription className="text-sm">
                   <strong>Login to unlock:</strong> Extend expiration, edit pastes, delete anytime, password protection, and view history
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Actor initializing notice */}
+            {actorFetching && (
+              <Alert className="bg-muted border-border">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <AlertDescription className="text-sm text-muted-foreground">
+                  Establishing secure connection{isAuthenticated ? ' with your identity' : ''}…
                 </AlertDescription>
               </Alert>
             )}
@@ -405,12 +426,17 @@ export default function CreatePastePage() {
             <Button
               type="submit"
               className="w-full gap-2"
-              disabled={isUploading || (!message.trim() && files.length === 0)}
+              disabled={isUploading || !isActorReady || (!message.trim() && files.length === 0)}
             >
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   {uploadProgress ? 'Uploading...' : 'Creating...'}
+                </>
+              ) : actorFetching ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Connecting...
                 </>
               ) : (
                 <>

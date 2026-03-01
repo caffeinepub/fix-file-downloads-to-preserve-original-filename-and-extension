@@ -11,9 +11,7 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
   type CompatPasteId = Nat;
   type CompatPasteIdMap = Map.Map<CompatPasteId, Text>;
@@ -312,13 +310,10 @@ actor {
     filename : Text,
     contentType : ?Text
   ) : async FileChunk {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only logged-in users can upload files");
-    };
-    
     if (blob.size() > fileSizeLimit) {
       Runtime.trap("File size exceeds the limit of 50MB");
     };
+
     {
       data = blob;
       filename;

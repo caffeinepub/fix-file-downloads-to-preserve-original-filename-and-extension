@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix paste retrieval so newly created pastes can be viewed immediately, and remove draft editor console errors.
+**Goal:** Fix the "Unauthorized: Only logged-in users can upload files" error occurring in production when uploading files.
 
 **Planned changes:**
-- Remove or suppress the draft-editor origin error that appears in the console during paste operations
-- Fix backend paste retrieval logic to return correct paste data for valid IDs instead of null
-- Verify paste ID format consistency between creation and retrieval operations
+- Investigate and fix the backend authentication/principal check for file upload operations to correctly handle authenticated users
+- Ensure the frontend passes the authenticated actor (not an anonymous actor) when initiating file uploads
+- Verify the upload flow works end-to-end in production for logged-in users
 
-**User-visible outcome:** Users can view their pastes immediately after creating them without encountering "Paste Not Found" errors, and the console will be free of draft-editor origin errors.
+**User-visible outcome:** Logged-in users can successfully upload files in production without receiving an Unauthorized error.

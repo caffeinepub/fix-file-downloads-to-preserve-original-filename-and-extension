@@ -25,7 +25,7 @@ export interface PasteError {
 }
 
 export function useCreatePaste() {
-  const { actor } = useActor();
+  const { actor, isFetching } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -36,6 +36,11 @@ export function useCreatePaste() {
         expirationType,
         hasPassword: !!password,
       });
+
+      if (isFetching) {
+        console.error('[useCreatePaste] Actor is still initializing (isFetching=true)');
+        throw new Error('Please wait while the connection is being established, then try again.');
+      }
 
       if (!actor) {
         console.error('[useCreatePaste] Actor not available');

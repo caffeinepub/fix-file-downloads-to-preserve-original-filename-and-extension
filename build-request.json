@@ -1,69 +1,37 @@
 {
   "kind": "build_request",
-  "title": "Fix paste retrieval and remove draft editor origin errors",
-  "projectName": "Paste Share",
-  "priority": "normal",
+  "title": "Fix unauthorized upload error in production",
+  "projectName": "PasteBin Share",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
-      "target": "frontend",
+      "text": "Fix the 'Unauthorized: Only logged-in users can upload files' error that occurs when uploading files in production. The backend authentication guard for file upload operations must correctly support both anonymous and authenticated uploads, or the frontend must ensure the actor is properly initialized with the authenticated identity before attempting uploads. Investigate whether the backend is rejecting calls due to a misconfigured principal check, and whether the frontend is passing the correct authenticated actor during the upload flow.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-latest"
         ],
         "quotes": [
-          "draft-script.js:700  draft-editor:error disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz"
+          "I am getting this error Unauthorized: Only logged-in users can upload files in production version when uploading."
         ]
       },
       "acceptanceCriteria": [
-        "Console no longer shows draft-editor origin errors",
-        "Paste creation and viewing functionality remains unaffected"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Fix the backend paste retrieval logic so that newly created pastes with valid IDs (e.g., 1771800332721583303) return the correct paste data instead of null",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "[useGetPaste] Backend response: null",
-          "Paste not found but remainingTime > 0 - possible password protection or access issue"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend returns paste data for valid paste IDs that were just created",
-        "Paste view page displays the paste content correctly",
-        "No 'Paste Not Found' error when viewing immediately after creation"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Verify that the paste ID format used during creation matches the format expected during retrieval, ensuring consistency between storage and lookup operations",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Paste IDs stored during creation can be successfully retrieved",
-        "ID normalization works consistently across create and get operations"
+        "A logged-in user can successfully upload files without receiving an Unauthorized error",
+        "If anonymous uploads are intended to be allowed, the backend access check is updated to permit them",
+        "If uploads require authentication, the frontend correctly passes the authenticated actor and prompts login before attempting upload",
+        "The upload flow works end-to-end in production without authorization errors"
       ]
     }
   ],
   "constraints": [
-    "Paste data resetting between deployments is acceptable",
-    "Do not modify the Internet Identity integration or authentication flow",
-    "Preserve existing paste ID validation logic in frontend/src/utils/pasteIds.ts"
+    "Do not break existing paste creation, viewing, or history features",
+    "Do not remove or weaken authentication on endpoints that are intentionally restricted to logged-in users"
   ],
   "nonGoals": [
-    "Implementing stable storage across deployments",
-    "Adding new paste features beyond fixing retrieval",
-    "Migrating existing paste data formats"
+    "Redesigning the authentication system or switching away from Internet Identity",
+    "Adding new upload features or changing file size limits",
+    "Fixing unrelated paste retrieval or paste-not-found issues"
   ],
   "imageRequirements": {
     "required": [],
