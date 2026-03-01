@@ -1,0 +1,27 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Fix paste retrieval and remove draft editor origin errors",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Remove or suppress the draft editor origin error that appears in the console during paste operations",
+      "acceptanceCriteria": [
+        "Console no longer shows draft-editor origin errors",
+        "Paste creation and viewing functionality remains unaffected"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/draftEditorDiagnostics.ts",
+          "operation": "modify",
+          "description": "Update the console.error filtering logic to properly suppress the draft-editor origin error from https://molecular-lavender-hsv-draft.caffeine.xyz. Ensure the filter catches both the exact error message format and any variants, while maintaining documentation that these are non-blocking platform preview warnings."
+        },
+        {
+          "path": "frontend/src/main.tsx",
+          "operation": "modify",
+          "description": "Verify that draftEditorDiagnostics is properly initialized early in the application lifecycle before any paste operations occur. Ensure the error suppression is active before the App component renders."
+        }
+      ]
+    }
+  ]
+}

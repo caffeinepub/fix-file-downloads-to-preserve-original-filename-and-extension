@@ -1,0 +1,50 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-22T22:50:53.652Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 3,
+    "implemented": 0,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/utils/draftEditorDiagnostics.ts",
+          "frontend/src/main.tsx"
+        ],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Fix the backend paste retrieval logic so that newly created pastes with valid IDs (e.g., 1771800332721583303) return the correct paste data instead of null",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Verify that the paste ID format used during creation matches the format expected during retrieval, ensuring consistency between storage and lookup operations",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      }
+    ]
+  },
+  "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-implementation-plan.json",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

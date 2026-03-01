@@ -1,0 +1,72 @@
+{
+  "kind": "build_request",
+  "title": "Fix paste retrieval and remove draft editor origin errors",
+  "projectName": "Paste Share",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "draft-script.js:700  draft-editor:error disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Console no longer shows draft-editor origin errors",
+        "Paste creation and viewing functionality remains unaffected"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Fix the backend paste retrieval logic so that newly created pastes with valid IDs (e.g., 1771800332721583303) return the correct paste data instead of null",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "[useGetPaste] Backend response: null",
+          "Paste not found but remainingTime > 0 - possible password protection or access issue"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend returns paste data for valid paste IDs that were just created",
+        "Paste view page displays the paste content correctly",
+        "No 'Paste Not Found' error when viewing immediately after creation"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Verify that the paste ID format used during creation matches the format expected during retrieval, ensuring consistency between storage and lookup operations",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Paste IDs stored during creation can be successfully retrieved",
+        "ID normalization works consistently across create and get operations"
+      ]
+    }
+  ],
+  "constraints": [
+    "Paste data resetting between deployments is acceptable",
+    "Do not modify the Internet Identity integration or authentication flow",
+    "Preserve existing paste ID validation logic in frontend/src/utils/pasteIds.ts"
+  ],
+  "nonGoals": [
+    "Implementing stable storage across deployments",
+    "Adding new paste features beyond fixing retrieval",
+    "Migrating existing paste data formats"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

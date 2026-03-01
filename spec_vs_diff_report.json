@@ -1,0 +1,44 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-22T22:50:53.650Z",
+  "summary": "The diff addresses backend paste retrieval logic (REQ-2, REQ-3) by adding migration support and ID resolution functionality. However, there is no evidence of frontend changes to address the draft editor origin error (REQ-1).",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Remove or suppress the draft editor origin error (disallowed origin: https://molecular-lavender-hsv-draft.caffeine.xyz) that appears in the console during paste operations",
+      "reason": "No frontend files were modified in the diff. The requirement explicitly targets [frontend] console errors from the draft editor, but only backend files (backend/main.mo, backend/migration.mo) and project_state.json were changed.",
+      "evidence": []
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Added migration module (backend/migration.mo) with migration infrastructure",
+      "reason": "The BuildRequest explicitly states in non-goals: 'Migrating existing paste data formats' and 'Implementing stable storage across deployments'. The migration module suggests data migration support which contradicts the stated non-goals and the constraint that 'Paste data resetting between deployments is acceptable'.",
+      "evidence": [
+        "backend/migration.mo",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "User profile management functionality (getCallerUserProfile, getUserProfile, saveCallerUserProfile)",
+      "reason": "The BuildRequest focuses solely on fixing paste retrieval and removing draft editor errors. User profile management is not mentioned in any requirement or acceptance criteria.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Authorization and access control enhancements (MixinAuthorization, AccessControl integration, verifyPasteAccess)",
+      "reason": "The constraint explicitly states 'Do not modify the Internet Identity integration or authentication flow'. While the diff shows integration of authorization mixins and access control logic, these changes were not requested in any requirement.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "confidence": 0.85,
+  "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
+    "project_state.json"
+  ]
+}
