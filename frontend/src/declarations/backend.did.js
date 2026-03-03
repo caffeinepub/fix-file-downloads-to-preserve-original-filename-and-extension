@@ -93,6 +93,11 @@ export const idlService = IDL.Service({
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getFileData' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat],
+      [IDL.Opt(FileChunk)],
+      ['query'],
+    ),
   'getFileMetadata' : IDL.Func(
       [IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Opt(IDL.Text)))],
@@ -102,6 +107,11 @@ export const idlService = IDL.Service({
   'getPaste' : IDL.Func(
       [IDL.Text, IDL.Opt(IDL.Text)],
       [IDL.Opt(Paste)],
+      ['query'],
+    ),
+  'getPasteChunk' : IDL.Func(
+      [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat],
+      [IDL.Opt(PasteChunk)],
       ['query'],
     ),
   'getPasteChunksWithTypes' : IDL.Func(
@@ -216,6 +226,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getFileData' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat],
+        [IDL.Opt(FileChunk)],
+        ['query'],
+      ),
     'getFileMetadata' : IDL.Func(
         [IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Opt(IDL.Text)))],
@@ -225,6 +240,11 @@ export const idlFactory = ({ IDL }) => {
     'getPaste' : IDL.Func(
         [IDL.Text, IDL.Opt(IDL.Text)],
         [IDL.Opt(Paste)],
+        ['query'],
+      ),
+    'getPasteChunk' : IDL.Func(
+        [IDL.Text, IDL.Opt(IDL.Text), IDL.Nat],
+        [IDL.Opt(PasteChunk)],
         ['query'],
       ),
     'getPasteChunksWithTypes' : IDL.Func(

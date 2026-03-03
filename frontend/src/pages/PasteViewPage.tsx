@@ -1,10 +1,11 @@
-import { useGetPaste, useIsPasteOwner, useGetRemainingTime, PasteError } from '../hooks/useQueries';
+import { useState } from 'react';
+import { useGetPaste, useIsPasteOwner, useGetRemainingTime, useCheckPasteNotExpired, PasteError } from '../hooks/useQueries';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Download, FileText, Clock, Crown } from 'lucide-react';
+import { Download, FileText, Clock, Crown, Loader2 } from 'lucide-react';
 import { formatRemainingTime } from '../utils/formatRemainingTime';
 import { downloadExternalBlob, computeDownloadFilename } from '../utils/fileDownload';
 import { toast } from 'sonner';
@@ -32,29 +33,70 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
   const { data: paste, isLoading, error, refetch } = useGetPaste(pasteId);
   const { data: isOwner, isLoading: isOwnerLoading } = useIsPasteOwner(pasteId);
   const { data: remainingTimeNs } = useGetRemainingTime(pasteId);
+  const checkNotExpired = useCheckPasteNotExpired(pasteId);
+
+  // Track which file indices are currently being downloaded
+  const [downloadingIndices, setDownloadingIndices] = useState<Set<number>>(new Set());
+  // If we detect expiration at download time, show the expired state
+  const [expiredAtDownload, setExpiredAtDownload] = useState(false);
 
   const showOwnerBadge = isAuthenticated && isOwner && !isOwnerLoading;
 
   const handleDownload = async (fileChunk: any, index: number) => {
+    // Mark this file as downloading
+    setDownloadingIndices(prev => new Set(prev).add(index));
+
     try {
+      // Perform a fresh backend expiration check before serving any data
+      const stillValid = await checkNotExpired(null);
+      if (!stillValid) {
+        // Paste has expired since the page was loaded — show expired state
+        setExpiredAtDownload(true);
+        toast.error('This paste has expired and can no longer be downloaded.');
+        return;
+      }
+
       const filename = computeDownloadFilename(
         fileChunk.filename,
         fileChunk.contentType,
         index
       );
-      
+
       await downloadExternalBlob(
         fileChunk.data,
         filename,
         fileChunk.contentType || undefined
       );
-      
+
       toast.success('Download started');
     } catch (err) {
       console.error('Download error:', err);
       toast.error('Failed to download file');
+    } finally {
+      setDownloadingIndices(prev => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
     }
   };
+
+  // If we detected expiration at download time, render the expired error state
+  if (expiredAtDownload) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <ErrorState
+          type="expired"
+          pasteId={pasteId}
+          onRetry={() => {
+            setExpiredAtDownload(false);
+            refetch();
+          }}
+          retryLabel="Retry Loading Paste"
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -88,7 +130,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
           </div>
         );
       }
-      
+
       if (error.type === 'not-found') {
         return (
           <div className="max-w-4xl mx-auto">
@@ -100,7 +142,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
           </div>
         );
       }
-      
+
       // Generic error with PasteError structure
       return (
         <div className="max-w-4xl mx-auto">
@@ -114,7 +156,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
         </div>
       );
     }
-    
+
     // Handle standard Error objects
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return (
@@ -189,6 +231,7 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
               <div className="space-y-2">
                 {fileChunks.map((chunk, index) => {
                   const fileChunk = chunk.file;
+                  const isDownloading = downloadingIndices.has(index);
                   return (
                     <div
                       key={index}
@@ -211,10 +254,20 @@ export default function PasteViewPage({ pasteId }: PasteViewPageProps) {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDownload(fileChunk, index)}
+                        disabled={isDownloading}
                         className="gap-2 shrink-0 w-full sm:w-auto"
                       >
-                        <Download className="h-4 w-4" />
-                        Download
+                        {isDownloading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Checking…
+                          </>
+                        ) : (
+                          <>
+                            <Download className="h-4 w-4" />
+                            Download
+                          </>
+                        )}
                       </Button>
                     </div>
                   );

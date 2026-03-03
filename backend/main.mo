@@ -7,6 +7,7 @@ import Time "mo:core/Time";
 import Nat "mo:core/Nat";
 import List "mo:core/List";
 import Int "mo:core/Int";
+import Array "mo:core/Array";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
@@ -87,7 +88,7 @@ actor {
   public shared ({ caller }) func createPaste(
     pasteChunks : [PasteChunk],
     expirationType : Text,
-    password : ?Text
+    password : ?Text,
   ) : async Text {
     if (pasteChunks.isEmpty()) {
       return "";
@@ -202,7 +203,7 @@ actor {
   public shared ({ caller }) func extendExpiration(
     pasteId : Text,
     newExpirationType : Text,
-    _password : ?Text
+    _password : ?Text,
   ) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only logged-in users can extend expiration");
@@ -308,7 +309,7 @@ actor {
   public shared ({ caller }) func saveFile(
     blob : Storage.ExternalBlob,
     filename : Text,
-    contentType : ?Text
+    contentType : ?Text,
   ) : async FileChunk {
     if (blob.size() > fileSizeLimit) {
       Runtime.trap("File size exceeds the limit of 50MB");
@@ -374,7 +375,7 @@ actor {
 
   public query ({ caller }) func getFileMetadata(
     pasteId : Text,
-    password : ?Text
+    password : ?Text,
   ) : async [(Text, ?Text)] {
     let resolvedId = resolvePasteId(pasteId);
     switch (pasteMap.get(resolvedId)) {
@@ -501,5 +502,70 @@ actor {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     userProfiles.clear();
+  };
+
+  public type PasteNotFound = {
+    #pasteNotFound;
+    #expired;
+    #unauthorized;
+  };
+
+  // Returns a specific chunk from a paste after verifying the paste has not expired
+  // and that the caller has access (password check). Returns null if the paste is
+  // not found, expired, access is denied, or the index is out of range.
+  public query ({ caller }) func getPasteChunk(
+    pasteId : Text,
+    password : ?Text,
+    index : Nat,
+  ) : async ?PasteChunk {
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        // Explicitly check expiration before serving any chunk data
+        if (Time.now() > paste.expirationTime) {
+          return null;
+        };
+        if (not verifyPasteAccess(paste, caller, password)) {
+          return null;
+        };
+        if (index >= paste.items.size()) {
+          return null;
+        };
+        ?paste.items[index];
+      };
+      case (null) { null };
+    };
+  };
+
+  // Returns file/attachment data for a specific chunk index in a paste.
+  // Independently verifies paste existence and expiration on the backend
+  // before returning any blob data, regardless of UI-side gating.
+  public query ({ caller }) func getFileData(
+    pasteId : Text,
+    password : ?Text,
+    index : Nat,
+  ) : async ?FileChunk {
+    let resolvedId = resolvePasteId(pasteId);
+    switch (pasteMap.get(resolvedId)) {
+      case (?paste) {
+        // Backend-enforced expiration check: refuse to serve attachment data
+        // if the parent paste has expired, even if the UI did not gate access.
+        if (Time.now() > paste.expirationTime) {
+          return null;
+        };
+        // Verify password / ownership access
+        if (not verifyPasteAccess(paste, caller, password)) {
+          return null;
+        };
+        if (index >= paste.items.size()) {
+          return null;
+        };
+        switch (paste.items[index]) {
+          case (#file(fileChunk)) { ?fileChunk };
+          case (#text(_)) { null };
+        };
+      };
+      case (null) { null };
+    };
   };
 };

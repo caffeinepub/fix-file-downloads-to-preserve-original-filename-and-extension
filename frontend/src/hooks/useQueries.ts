@@ -376,3 +376,35 @@ export function useSaveFile() {
     },
   });
 }
+
+/**
+ * Returns a function that performs a fresh (cache-bypassing) expiration check
+ * against the backend at the moment it is called. Used to gate downloads so
+ * that a paste that expires while the page is open cannot still be downloaded.
+ *
+ * Returns `true` if the paste is still valid, `false` if it has expired or
+ * cannot be verified.
+ */
+export function useCheckPasteNotExpired(pasteId: string) {
+  const { actor } = useActor();
+
+  const checkNotExpired = async (password: string | null = null): Promise<boolean> => {
+    if (!actor) return false;
+    try {
+      // getRemainingTime returns 0 for both expired and non-existent pastes.
+      // We use getPaste as the authoritative check: if it returns null the
+      // paste is either expired or inaccessible, so we block the download.
+      const remaining = await actor.getRemainingTime(pasteId);
+      if (remaining === BigInt(0)) {
+        return false;
+      }
+      // Double-check: attempt to fetch the paste to confirm access is still valid.
+      const paste = await actor.getPaste(pasteId, password);
+      return paste !== null;
+    } catch {
+      return false;
+    }
+  };
+
+  return checkNotExpired;
+}

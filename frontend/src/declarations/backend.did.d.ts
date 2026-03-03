@@ -72,12 +72,20 @@ export interface _SERVICE {
   'extendExpiration' : ActorMethod<[string, string, [] | [string]], undefined>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getFileData' : ActorMethod<
+    [string, [] | [string], bigint],
+    [] | [FileChunk]
+  >,
   'getFileMetadata' : ActorMethod<
     [string, [] | [string]],
     Array<[string, [] | [string]]>
   >,
   'getPassword' : ActorMethod<[string], [] | [string]>,
   'getPaste' : ActorMethod<[string, [] | [string]], [] | [Paste]>,
+  'getPasteChunk' : ActorMethod<
+    [string, [] | [string], bigint],
+    [] | [PasteChunk]
+  >,
   'getPasteChunksWithTypes' : ActorMethod<
     [string, [] | [string]],
     Array<[PasteChunk, PasteChunkType]>

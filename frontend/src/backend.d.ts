@@ -56,9 +56,11 @@ export interface backendInterface {
     extendExpiration(pasteId: string, newExpirationType: string, _password: string | null): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getFileData(pasteId: string, password: string | null, index: bigint): Promise<FileChunk | null>;
     getFileMetadata(pasteId: string, password: string | null): Promise<Array<[string, string | null]>>;
     getPassword(pasteId: string): Promise<string | null>;
     getPaste(pasteId: string, password: string | null): Promise<Paste | null>;
+    getPasteChunk(pasteId: string, password: string | null, index: bigint): Promise<PasteChunk | null>;
     getPasteChunksWithTypes(pasteId: string, password: string | null): Promise<Array<[PasteChunk, PasteChunkType]>>;
     getPasteHistory(): Promise<Array<[string, Paste]> | null>;
     getRemainingTime(pasteId: string): Promise<bigint>;

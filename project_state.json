@@ -1,24 +1,49 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "A web application (pastebin/file upload style) where users can create and share content. Currently debugging authentication issues in production — users are getting 'Unauthorized: Only logged-in users can upload files' error when attempting to upload files.",
-  "architectural_notes": [],
+  "summary": "A pastebin-style application with file/image upload support, paste expiration, and secure data handling. Fixing expiration bypass on downloads and ensuring backend truly blocks access to attachments after expiration.",
+  "architectural_notes": [
+    "Paste expiration must be enforced server-side at time of each request, not just on page load",
+    "Expired paste attachments/images must be deleted or refused at the backend, not just hidden in the UI"
+  ],
   "known_issues": [
-    "Production upload returns 'Unauthorized: Only logged-in users can upload files' error — authentication check may be incorrectly blocking uploads or login flow is not properly integrated"
+    "Download bypass: expiration check only on page load allows downloads after paste expires if page stays open"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-unauthorized-only-logged-in-users-can-upload-files-error-that-occurs-when-uploading-files-in-production-the-backend-authentication-guard-for-file-upload-operations-must-correctly-support-both-anonymous-and-authenticated-uploads-or-the-frontend-must-ensure-the-actor-is-properly-initialized-with-the-authenticated-identity-before-attempting-uploads-investigate-whether-the-backend-is-rejecting-calls-due-to-a-misconfigured-principal-check-and-whether-the-frontend-is-passing-the-correct-authenticated-actor-during-the-upload-flow",
-      "title": "Fix the 'Unauthorized: Only logged-in users can upload files' error that occurs when uploading files in production. The backend authentication guard for file upload operations must correctly support both anonymous and authenticated uploads, or the frontend must ensure the actor is properly initialized with the authenticated identity before attempting uploads. Investigate whether the backend is rejecting calls due to a misconfigured principal check, and whether the frontend is passing the correct authenticated actor during the upload flow.",
+      "id": "feature-on-the-frontend-in-pasteviewpage-tsx-before-triggering-a-file-or-image-download-perform-a-fresh-expiration-check-against-the-backend-re-fetch-or-re-validate-the-paste-at-the-moment-the-user-clicks-the-download-button-if-the-paste-is-found-to-be-expired-at-that-point-abort-the-download-and-display-the-expired-error-state-instead-of-proceeding-with-the-download",
+      "title": "On the frontend, in PasteViewPage.tsx, before triggering a file or image download, perform a fresh expiration check against the backend (re-fetch or re-validate the paste) at the moment the user clicks the download button. If the paste is found to be expired at that point, abort the download and display the expired error state instead of proceeding with the download.",
       "reqIds": [
-        "REQ-1"
+        "REQ-2"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "PasteBin Share",
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Real-time expiration check at download time (not just on page load)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Backend enforcement to block/delete attachments and images after paste expiration",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "On the backend, when a request is made to retrieve or download an attachment or image blob, check whether the parent paste has expired before returning any data. If the paste is expired, refuse to serve the attachment and return an error (e.g., #expired or equivalent variant). Do not rely solely on UI-side expiration gating.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Fix expiration bypass: enforce real-time expiration checks on downloads and block expired attachments on backend",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,37 +1,26 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix unauthorized upload error in production",
+  "title": "Fix expiration bypass: enforce real-time expiration checks on downloads and block expired attachments on frontend",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Fix the 'Unauthorized: Only logged-in users can upload files' error in production by ensuring the frontend properly initializes the authenticated actor before file upload operations and verifying backend authorization logic allows the intended access pattern",
+      "id": "REQ-2",
+      "summary": "Perform fresh expiration check before file/image downloads to prevent downloading expired pastes",
       "acceptanceCriteria": [
-        "A logged-in user can successfully upload files without receiving an Unauthorized error",
-        "If anonymous uploads are intended to be allowed, the backend access check is updated to permit them",
-        "If uploads require authentication, the frontend correctly passes the authenticated actor and prompts login before attempting upload",
-        "The upload flow works end-to-end in production without authorization errors"
+        "If a paste expires while the page is open and the user clicks download, the download is blocked and the expired error state is shown.",
+        "The expiration check at download time queries the backend fresh, not from stale in-memory or cached state.",
+        "If the paste is still valid at download time, the download proceeds normally without disruption."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/pages/PasteViewPage.tsx",
           "operation": "modify",
-          "description": "Review and ensure the actor initialization logic correctly handles authenticated identity before any backend calls. Verify that the authenticated actor is fully initialized and the identity principal is properly set before the actor becomes available to dependent hooks. Add additional validation or initialization checks if needed to prevent race conditions where upload operations attempt to use an actor that hasn't fully established its authenticated context."
+          "description": "Add real-time expiration validation before file downloads. When the user clicks a download button, re-fetch the paste from the backend to verify it hasn't expired. If the fresh backend check indicates the paste is expired, abort the download and transition to the expired error state. If valid, proceed with the download. This ensures that even if the paste expires while the page is open, downloads are blocked based on current backend state rather than stale cached data."
         },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Review the createPaste mutation and any file upload operations to ensure they wait for the authenticated actor to be fully available before executing backend calls. Add guards to prevent upload attempts when the actor is not ready or when the user is not authenticated. Verify the component is using the authorization component's pattern by checking authentication state before allowing file uploads."
-        },
-        {
-          "path": "frontend/src/pages/CreatePastePage.tsx",
-          "operation": "modify",
-          "description": "Add explicit authentication checks before allowing file upload operations. Display a login prompt or disable the upload button when the user is not authenticated. Ensure that the file upload flow only proceeds after verifying the user has a valid authenticated identity and the actor is fully initialized. Use the authorization component to guard upload functionality and verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/PasteEditModal.tsx",
-          "operation": "modify",
-          "description": "Add authentication validation before allowing file uploads in the edit flow. Ensure the authenticated actor is available and the user identity is properly established before attempting to upload new files during paste edits. Add user feedback if authentication state is not ready."
+          "description": "Add a lightweight query hook for real-time expiration validation that bypasses TanStack Query cache. This hook should accept a pasteId and password, call the backend's getPaste or getRemainingTime method with cache disabled, and return whether the paste is currently expired. This enables PasteViewPage to perform fresh backend checks at download time without relying on potentially stale query cache."
         }
       ]
     }

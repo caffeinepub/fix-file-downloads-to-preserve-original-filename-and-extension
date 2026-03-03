@@ -1,34 +1,25 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T19:10:55.348Z",
-  "summary": "The diff addresses REQ-1 by making frontend-side fixes: guarding against submitting before the authenticated actor is ready (checking isFetching and actor availability), adding actor initialization checks in useCreatePaste, CreatePastePage, and PasteEditModal. The backend main.mo also shows changes, though the file is truncated. The frontend correctly passes the authenticated actor and prevents uploads with a stale anonymous actor. No evidence of backend saveFile authorization logic being changed is visible in the truncated diff.",
+  "generatedAt": "2026-03-01T19:47:41.554Z",
+  "summary": "The diff implements both REQ-1 (backend expiration enforcement) and REQ-2 (frontend real-time expiration check at download time). REQ-2 is clearly implemented in PasteViewPage.tsx with a fresh backend check via useCheckPasteNotExpired before every download. REQ-1 appears to be addressed in backend/main.mo with expiration checks in verifyPasteAccess, but the diff is truncated and we cannot fully verify that blob/attachment retrieval endpoints enforce this check. The frontend hook useCheckPasteNotExpired is added to useQueries.ts. Overall implementation appears substantially complete with minor uncertainty due to truncation.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Investigate and fix whether the backend is rejecting calls due to a misconfigured principal check in the file upload authorization guard (saveFile function)",
-      "reason": "The backend main.mo diff is truncated and does not show the saveFile or file upload authorization guard. There is no visible evidence that the backend authorization check for file uploads (the one producing 'Unauthorized: Only logged-in users can upload files') was modified or removed. Only frontend guards were clearly implemented.",
+      "requirement": "Both file attachments and image data are subject to the same backend expiration enforcement when retrieving blobs.",
+      "reason": "The backend/main.mo diff is truncated after showing verifyPasteAccess with an expiration check, but the actual blob/attachment retrieval endpoints (e.g., getFile, loadFile, or equivalent) are not visible in the diff. We cannot confirm that the expiration check is applied at the point of blob retrieval rather than only at the paste metadata level.",
       "evidence": [
         "backend/main.mo"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Paste verification step after creation: after calling createPaste, the frontend calls getPaste to verify the paste was stored correctly",
-      "reason": "The build request only asks to fix the unauthorized upload error. Adding a post-creation verification call (getPaste after createPaste) was not requested.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts"
-      ]
-    }
-  ],
-  "confidence": 0.62,
+  "hallucinated_features": [],
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/PasteEditModal.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/CreatePastePage.tsx",
+    "frontend/src/pages/PasteViewPage.tsx",
     "project_state.json"
   ]
 }

@@ -149,9 +149,11 @@ export interface backendInterface {
     extendExpiration(pasteId: string, newExpirationType: string, _password: string | null): Promise<void>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getFileData(pasteId: string, password: string | null, index: bigint): Promise<FileChunk | null>;
     getFileMetadata(pasteId: string, password: string | null): Promise<Array<[string, string | null]>>;
     getPassword(pasteId: string): Promise<string | null>;
     getPaste(pasteId: string, password: string | null): Promise<Paste | null>;
+    getPasteChunk(pasteId: string, password: string | null, index: bigint): Promise<PasteChunk | null>;
     getPasteChunksWithTypes(pasteId: string, password: string | null): Promise<Array<[PasteChunk, PasteChunkType]>>;
     getPasteHistory(): Promise<Array<[string, Paste]> | null>;
     getRemainingTime(pasteId: string): Promise<bigint>;
@@ -420,74 +422,102 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n18(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getFileData(arg0: string, arg1: string | null, arg2: bigint): Promise<FileChunk | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFileData(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1), arg2);
+                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFileData(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1), arg2);
+            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getFileMetadata(arg0: string, arg1: string | null): Promise<Array<[string, string | null]>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getFileMetadata(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
-                return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getFileMetadata(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPassword(arg0: string): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPassword(arg0);
-                return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getPassword(arg0);
-            return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getPaste(arg0: string, arg1: string | null): Promise<Paste | null> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getPaste(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPaste(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.getPassword(arg0);
             return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPaste(arg0: string, arg1: string | null): Promise<Paste | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPaste(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPaste(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPasteChunk(arg0: string, arg1: string | null, arg2: bigint): Promise<PasteChunk | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPasteChunk(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1), arg2);
+                return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPasteChunk(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1), arg2);
+            return from_candid_opt_n34(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPasteChunksWithTypes(arg0: string, arg1: string | null): Promise<Array<[PasteChunk, PasteChunkType]>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPasteChunksWithTypes(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
-                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPasteChunksWithTypes(arg0, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPasteHistory(): Promise<Array<[string, Paste]> | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPasteHistory();
-                return from_candid_opt_n37(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPasteHistory();
-            return from_candid_opt_n37(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n39(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRemainingTime(arg0: string): Promise<bigint> {
@@ -592,14 +622,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.saveFile(await to_candid_ExternalBlob_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg2));
-                return from_candid_FileChunk_n30(this._uploadFile, this._downloadFile, result);
+                return from_candid_FileChunk_n21(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.saveFile(await to_candid_ExternalBlob_n15(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n16(this._uploadFile, this._downloadFile, arg2));
-            return from_candid_FileChunk_n30(this._uploadFile, this._downloadFile, result);
+            return from_candid_FileChunk_n21(this._uploadFile, this._downloadFile, result);
         }
     }
     async systemDefaultCheck(): Promise<void> {
@@ -631,20 +661,20 @@ export class Backend implements backendInterface {
         }
     }
 }
-async function from_candid_ExternalBlob_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExternalBlob): Promise<ExternalBlob> {
+async function from_candid_ExternalBlob_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ExternalBlob): Promise<ExternalBlob> {
     return await _downloadFile(value);
 }
-async function from_candid_FileChunk_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FileChunk): Promise<FileChunk> {
-    return await from_candid_record_n31(_uploadFile, _downloadFile, value);
+async function from_candid_FileChunk_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FileChunk): Promise<FileChunk> {
+    return await from_candid_record_n22(_uploadFile, _downloadFile, value);
 }
-function from_candid_PasteChunkType_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PasteChunkType): PasteChunkType {
-    return from_candid_variant_n36(_uploadFile, _downloadFile, value);
+function from_candid_PasteChunkType_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PasteChunkType): PasteChunkType {
+    return from_candid_variant_n38(_uploadFile, _downloadFile, value);
 }
-async function from_candid_PasteChunk_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PasteChunk): Promise<PasteChunk> {
-    return await from_candid_variant_n29(_uploadFile, _downloadFile, value);
+async function from_candid_PasteChunk_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PasteChunk): Promise<PasteChunk> {
+    return await from_candid_variant_n33(_uploadFile, _downloadFile, value);
 }
-async function from_candid_Paste_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Paste): Promise<Paste> {
-    return await from_candid_record_n25(_uploadFile, _downloadFile, value);
+async function from_candid_Paste_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Paste): Promise<Paste> {
+    return await from_candid_record_n29(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n19(_uploadFile, _downloadFile, value);
@@ -655,17 +685,23 @@ function from_candid__CaffeineStorageRefillResult_n4(_uploadFile: (file: Externa
 function from_candid_opt_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+async function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_FileChunk]): Promise<FileChunk | null> {
+    return value.length === 0 ? null : await from_candid_FileChunk_n21(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-async function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Paste]): Promise<Paste | null> {
-    return value.length === 0 ? null : await from_candid_Paste_n24(_uploadFile, _downloadFile, value[0]);
+async function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Paste]): Promise<Paste | null> {
+    return value.length === 0 ? null : await from_candid_Paste_n28(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
+function from_candid_opt_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
 }
-async function from_candid_opt_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Array<[string, _Paste]>]): Promise<Array<[string, Paste]> | null> {
-    return value.length === 0 ? null : await from_candid_vec_n38(_uploadFile, _downloadFile, value[0]);
+async function from_candid_opt_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_PasteChunk]): Promise<PasteChunk | null> {
+    return value.length === 0 ? null : await from_candid_PasteChunk_n32(_uploadFile, _downloadFile, value[0]);
+}
+async function from_candid_opt_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Array<[string, _Paste]>]): Promise<Array<[string, Paste]> | null> {
+    return value.length === 0 ? null : await from_candid_vec_n40(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];
@@ -673,7 +709,22 @@ function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-async function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    contentType: [] | [string];
+    data: _ExternalBlob;
+    filename: string;
+}): Promise<{
+    contentType?: string;
+    data: ExternalBlob;
+    filename: string;
+}> {
+    return {
+        contentType: record_opt_to_undefined(from_candid_opt_n23(_uploadFile, _downloadFile, value.contentType)),
+        data: await from_candid_ExternalBlob_n24(_uploadFile, _downloadFile, value.data),
+        filename: value.filename
+    };
+}
+async function from_candid_record_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     owner: [] | [Principal];
     password: [] | [string];
     expirationTime: bigint;
@@ -685,25 +736,10 @@ async function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promi
     items: Array<PasteChunk>;
 }> {
     return {
-        owner: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.owner)),
-        password: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.password)),
+        owner: record_opt_to_undefined(from_candid_opt_n30(_uploadFile, _downloadFile, value.owner)),
+        password: record_opt_to_undefined(from_candid_opt_n23(_uploadFile, _downloadFile, value.password)),
         expirationTime: value.expirationTime,
-        items: await from_candid_vec_n27(_uploadFile, _downloadFile, value.items)
-    };
-}
-async function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    contentType: [] | [string];
-    data: _ExternalBlob;
-    filename: string;
-}): Promise<{
-    contentType?: string;
-    data: ExternalBlob;
-    filename: string;
-}> {
-    return {
-        contentType: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.contentType)),
-        data: await from_candid_ExternalBlob_n32(_uploadFile, _downloadFile, value.data),
-        filename: value.filename
+        items: await from_candid_vec_n31(_uploadFile, _downloadFile, value.items)
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -718,22 +754,22 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
         topped_up_amount: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.topped_up_amount))
     };
 }
-function from_candid_tuple_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [string, [] | [string]]): [string, string | null] {
+function from_candid_tuple_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [string, [] | [string]]): [string, string | null] {
     return [
         value[0],
-        from_candid_opt_n22(_uploadFile, _downloadFile, value[1])
+        from_candid_opt_n23(_uploadFile, _downloadFile, value[1])
     ];
 }
-async function from_candid_tuple_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [_PasteChunk, _PasteChunkType]): Promise<[PasteChunk, PasteChunkType]> {
+async function from_candid_tuple_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [_PasteChunk, _PasteChunkType]): Promise<[PasteChunk, PasteChunkType]> {
     return [
-        await from_candid_PasteChunk_n28(_uploadFile, _downloadFile, value[0]),
-        from_candid_PasteChunkType_n35(_uploadFile, _downloadFile, value[1])
+        await from_candid_PasteChunk_n32(_uploadFile, _downloadFile, value[0]),
+        from_candid_PasteChunkType_n37(_uploadFile, _downloadFile, value[1])
     ];
 }
-async function from_candid_tuple_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [string, _Paste]): Promise<[string, Paste]> {
+async function from_candid_tuple_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [string, _Paste]): Promise<[string, Paste]> {
     return [
         value[0],
-        await from_candid_Paste_n24(_uploadFile, _downloadFile, value[1])
+        await from_candid_Paste_n28(_uploadFile, _downloadFile, value[1])
     ];
 }
 function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -745,7 +781,7 @@ function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-async function from_candid_variant_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+async function from_candid_variant_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     file: _FileChunk;
 } | {
     text: string;
@@ -758,30 +794,30 @@ async function from_candid_variant_n29(_uploadFile: (file: ExternalBlob) => Prom
 }> {
     return "file" in value ? {
         __kind__: "file",
-        file: await from_candid_FileChunk_n30(_uploadFile, _downloadFile, value.file)
+        file: await from_candid_FileChunk_n21(_uploadFile, _downloadFile, value.file)
     } : "text" in value ? {
         __kind__: "text",
         text: value.text
     } : value;
 }
-function from_candid_variant_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     file: null;
 } | {
     text: null;
 }): PasteChunkType {
     return "file" in value ? PasteChunkType.file : "text" in value ? PasteChunkType.text : value;
 }
-function from_candid_vec_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[string, [] | [string]]>): Array<[string, string | null]> {
-    return value.map((x)=>from_candid_tuple_n21(_uploadFile, _downloadFile, x));
+function from_candid_vec_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[string, [] | [string]]>): Array<[string, string | null]> {
+    return value.map((x)=>from_candid_tuple_n26(_uploadFile, _downloadFile, x));
 }
-async function from_candid_vec_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PasteChunk>): Promise<Array<PasteChunk>> {
-    return await Promise.all(value.map(async (x)=>await from_candid_PasteChunk_n28(_uploadFile, _downloadFile, x)));
+async function from_candid_vec_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PasteChunk>): Promise<Array<PasteChunk>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_PasteChunk_n32(_uploadFile, _downloadFile, x)));
 }
-async function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[_PasteChunk, _PasteChunkType]>): Promise<Array<[PasteChunk, PasteChunkType]>> {
-    return await Promise.all(value.map(async (x)=>await from_candid_tuple_n34(_uploadFile, _downloadFile, x)));
+async function from_candid_vec_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[_PasteChunk, _PasteChunkType]>): Promise<Array<[PasteChunk, PasteChunkType]>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_tuple_n36(_uploadFile, _downloadFile, x)));
 }
-async function from_candid_vec_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[string, _Paste]>): Promise<Array<[string, Paste]>> {
-    return await Promise.all(value.map(async (x)=>await from_candid_tuple_n39(_uploadFile, _downloadFile, x)));
+async function from_candid_vec_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<[string, _Paste]>): Promise<Array<[string, Paste]>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_tuple_n41(_uploadFile, _downloadFile, x)));
 }
 async function to_candid_ExternalBlob_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
     return await _uploadFile(value);
